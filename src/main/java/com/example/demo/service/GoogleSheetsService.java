@@ -36,17 +36,20 @@ public class GoogleSheetsService {
         StringBuilder csv = new StringBuilder();
         
         // Header
-        csv.append("Event,Event Name,Purpose,Trigger,Parameter Name,Example Value,Parameter Description\n");
+        csv.append("Event Name,Event Category,Event Description,Event Location,Property Group,Property Label,Property Name,Property Definition,Data Type,Possible Values\n");
         
         // Date
         for (TaggingRow row : taggingRows) {
-            csv.append("\"").append(escapeCSV(row.getEvent())).append("\",");
             csv.append("\"").append(escapeCSV(row.getEventName())).append("\",");
-            csv.append("\"").append(escapeCSV(row.getPurpose())).append("\",");
-            csv.append("\"").append(escapeCSV(row.getTrigger())).append("\",");
-            csv.append("\"").append(escapeCSV(row.getParameterName())).append("\",");
-            csv.append("\"").append(escapeCSV(row.getExampleValue())).append("\",");
-            csv.append("\"").append(escapeCSV(row.getParameterDescription())).append("\"\n");
+            csv.append("\"").append(escapeCSV(row.getEventCategory())).append("\",");
+            csv.append("\"").append(escapeCSV(row.getEventDescription())).append("\",");
+            csv.append("\"").append(escapeCSV(row.getEventLocation())).append("\",");
+            csv.append("\"").append(escapeCSV(row.getPropertyGroup())).append("\",");
+            csv.append("\"").append(escapeCSV(row.getPropertyLabel())).append("\",");
+            csv.append("\"").append(escapeCSV(row.getPropertyName())).append("\",");
+            csv.append("\"").append(escapeCSV(row.getPropertyDefinition())).append("\",");
+            csv.append("\"").append(escapeCSV(row.getDataType())).append("\",");
+            csv.append("\"").append(escapeCSV(row.getPossibleValues())).append("\"\n");
         }
         
         return csv.toString();

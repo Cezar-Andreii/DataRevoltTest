@@ -83,63 +83,123 @@
                             <table class="table table-bordered table-hover mb-0" id="taggingTable">
                                 <thead class="table-dark sticky-top">
                                     <tr>
-                                        <th style="width: 10%;">Event</th>
-                                        <th style="width: 15%;">Event Name</th>
-                                        <th style="width: 20%;">Purpose</th>
-                                        <th style="width: 15%;">Trigger</th>
-                                        <th style="width: 15%;">Parameter Name</th>
-                                        <th style="width: 10%;">Example Value</th>
-                                        <th style="width: 15%;">Parameter Description</th>
+                                        <th style="width: 8%;">Event Name</th>
+                                        <th style="width: 8%;">Event Category</th>
+                                        <th style="width: 12%;">Event Description</th>
+                                        <th style="width: 8%;">Event Location</th>
+                                        <th style="width: 8%;">Property Group</th>
+                                        <th style="width: 8%;">Property Label</th>
+                                        <th style="width: 8%;">Property Name</th>
+                                        <th style="width: 15%;">Property Definition</th>
+                                        <th style="width: 8%;">Data Type</th>
+                                        <th style="width: 10%;">Possible Values</th>
                                         <th style="width: 5%;">Actions</th>
+                                    </tr>
+                                    <tr class="table-info">
+                                        <td><strong>Any meaningful action a user takes within your product. By "event"
+                                                this refers to a dataLayer event, not necessary with an exact
+                                                correspondent in Google Analytics</strong></td>
+                                        <td><strong>General category of the event. "Utility" events are not collected
+                                                directly, but rather used as support by the rest of the
+                                                implementation.</strong></td>
+                                        <td><strong>Description of the event being performed (for any given end user to
+                                                understand)</strong></td>
+                                        <td><strong>The pages where the event can trigger.</strong></td>
+                                        <td><strong>Analytics or Custom Property. If Custom Property, the property needs
+                                                to be created in Google Analytics</strong></td>
+                                        <td><strong>Metric or Dimension</strong></td>
+                                        <td><strong>Any rich metadata associated to the event, either describing the
+                                                event itself or the user performing that event</strong></td>
+                                        <td><strong>Description of the property associated with the event being
+                                                performed (for any given end user to understand)</strong></td>
+                                        <td><strong>One of six possible data types</strong></td>
+                                        <td><strong>Sample value of the property or all possible values. As a general
+                                                rule, when the value, for any reason, is not available, the value is set
+                                                to undefined</strong></td>
+                                        <td></td>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr th:each="row, iterStat : ${taggingRows}" th:id="'row-' + ${iterStat.index}">
-                                        <td>
-                                            <input type="text" class="form-control form-control-sm editable-cell"
-                                                th:value="${row.event}" th:name="'event_' + ${iterStat.index}"
-                                                th:id="'event_' + ${iterStat.index}" data-field="event"
-                                                th:attr="data-row-index=${iterStat.index}">
-                                        </td>
+                                    <tr th:each="row, iterStat : ${taggingRows}" th:id="'row-' + ${iterStat.index}"
+                                        th:class="${row.eventName != '' and row.eventName != null} ? 'table-primary' : ''">
                                         <td>
                                             <input type="text" class="form-control form-control-sm editable-cell"
                                                 th:value="${row.eventName}" th:name="'eventName_' + ${iterStat.index}"
                                                 th:id="'eventName_' + ${iterStat.index}" data-field="eventName"
-                                                th:attr="data-row-index=${iterStat.index}">
+                                                th:attr="data-row-index=${iterStat.index}"
+                                                th:class="${row.eventName == '' or row.eventName == null} ? 'bg-light' : ''">
                                         </td>
                                         <td>
                                             <input type="text" class="form-control form-control-sm editable-cell"
-                                                th:value="${row.purpose}" th:name="'purpose_' + ${iterStat.index}"
-                                                th:id="'purpose_' + ${iterStat.index}" data-field="purpose"
-                                                th:attr="data-row-index=${iterStat.index}">
+                                                th:value="${row.eventCategory}"
+                                                th:name="'eventCategory_' + ${iterStat.index}"
+                                                th:id="'eventCategory_' + ${iterStat.index}" data-field="eventCategory"
+                                                th:attr="data-row-index=${iterStat.index}"
+                                                th:class="${row.eventCategory == '' or row.eventCategory == null} ? 'bg-light' : ''">
                                         </td>
                                         <td>
                                             <input type="text" class="form-control form-control-sm editable-cell"
-                                                th:value="${row.trigger}" th:name="'trigger_' + ${iterStat.index}"
-                                                th:id="'trigger_' + ${iterStat.index}" data-field="trigger"
-                                                th:attr="data-row-index=${iterStat.index}">
+                                                th:value="${row.eventDescription}"
+                                                th:name="'eventDescription_' + ${iterStat.index}"
+                                                th:id="'eventDescription_' + ${iterStat.index}"
+                                                data-field="eventDescription" th:attr="data-row-index=${iterStat.index}"
+                                                th:class="${row.eventDescription == '' or row.eventDescription == null} ? 'bg-light' : ''">
                                         </td>
                                         <td>
                                             <input type="text" class="form-control form-control-sm editable-cell"
-                                                th:value="${row.parameterName}"
-                                                th:name="'parameterName_' + ${iterStat.index}"
-                                                th:id="'parameterName_' + ${iterStat.index}" data-field="parameterName"
-                                                th:attr="data-row-index=${iterStat.index}">
+                                                th:value="${row.eventLocation}"
+                                                th:name="'eventLocation_' + ${iterStat.index}"
+                                                th:id="'eventLocation_' + ${iterStat.index}" data-field="eventLocation"
+                                                th:attr="data-row-index=${iterStat.index}"
+                                                th:class="${row.eventLocation == '' or row.eventLocation == null} ? 'bg-light' : ''">
                                         </td>
                                         <td>
                                             <input type="text" class="form-control form-control-sm editable-cell"
-                                                th:value="${row.exampleValue}"
-                                                th:name="'exampleValue_' + ${iterStat.index}"
-                                                th:id="'exampleValue_' + ${iterStat.index}" data-field="exampleValue"
-                                                th:attr="data-row-index=${iterStat.index}">
+                                                th:value="${row.propertyGroup}"
+                                                th:name="'propertyGroup_' + ${iterStat.index}"
+                                                th:id="'propertyGroup_' + ${iterStat.index}" data-field="propertyGroup"
+                                                th:attr="data-row-index=${iterStat.index}"
+                                                th:class="${row.propertyGroup == '' or row.propertyGroup == null} ? 'bg-light' : ''">
                                         </td>
                                         <td>
                                             <input type="text" class="form-control form-control-sm editable-cell"
-                                                th:value="${row.parameterDescription}"
-                                                th:name="'parameterDescription_' + ${iterStat.index}"
-                                                th:id="'parameterDescription_' + ${iterStat.index}"
-                                                data-field="parameterDescription"
-                                                th:attr="data-row-index=${iterStat.index}">
+                                                th:value="${row.propertyLabel}"
+                                                th:name="'propertyLabel_' + ${iterStat.index}"
+                                                th:id="'propertyLabel_' + ${iterStat.index}" data-field="propertyLabel"
+                                                th:attr="data-row-index=${iterStat.index}"
+                                                th:class="${row.propertyLabel == '' or row.propertyLabel == null} ? 'bg-light' : ''">
+                                        </td>
+                                        <td>
+                                            <input type="text" class="form-control form-control-sm editable-cell"
+                                                th:value="${row.propertyName}"
+                                                th:name="'propertyName_' + ${iterStat.index}"
+                                                th:id="'propertyName_' + ${iterStat.index}" data-field="propertyName"
+                                                th:attr="data-row-index=${iterStat.index}"
+                                                th:class="${row.propertyName == '' or row.propertyName == null} ? 'bg-light' : ''">
+                                        </td>
+                                        <td>
+                                            <input type="text" class="form-control form-control-sm editable-cell"
+                                                th:value="${row.propertyDefinition}"
+                                                th:name="'propertyDefinition_' + ${iterStat.index}"
+                                                th:id="'propertyDefinition_' + ${iterStat.index}"
+                                                data-field="propertyDefinition"
+                                                th:attr="data-row-index=${iterStat.index}"
+                                                th:class="${row.propertyDefinition == '' or row.propertyDefinition == null} ? 'bg-light' : ''">
+                                        </td>
+                                        <td>
+                                            <input type="text" class="form-control form-control-sm editable-cell"
+                                                th:value="${row.dataType}" th:name="'dataType_' + ${iterStat.index}"
+                                                th:id="'dataType_' + ${iterStat.index}" data-field="dataType"
+                                                th:attr="data-row-index=${iterStat.index}"
+                                                th:class="${row.dataType == '' or row.dataType == null} ? 'bg-light' : ''">
+                                        </td>
+                                        <td>
+                                            <input type="text" class="form-control form-control-sm editable-cell"
+                                                th:value="${row.possibleValues}"
+                                                th:name="'possibleValues_' + ${iterStat.index}"
+                                                th:id="'possibleValues_' + ${iterStat.index}"
+                                                data-field="possibleValues" th:attr="data-row-index=${iterStat.index}"
+                                                th:class="${row.possibleValues == '' or row.possibleValues == null} ? 'bg-light' : ''">
                                         </td>
                                         <td class="text-center">
                                             <div class="btn-group" role="group">
@@ -155,7 +215,7 @@
                                         </td>
                                     </tr>
                                     <tr th:if="${#lists.isEmpty(taggingRows)}">
-                                        <td colspan="8" class="text-center text-muted py-4">
+                                        <td colspan="11" class="text-center text-muted py-4">
                                             Nu există rânduri în tagging plan. Selectează un eveniment și parametri
                                             pentru a genera planul.
                                         </td>
@@ -165,6 +225,7 @@
                         </div>
                     </div>
                 </div>
+
             </div>
         </div>
     </div>

@@ -1,36 +1,35 @@
 package com.example.demo.model;
 
 public class TaggingRow {
-    private String event;
     private String eventName;
-    private String purpose;
-    private String trigger;
-    private String parameterName;
-    private String exampleValue;
-    private String parameterDescription;
+    private String eventCategory;
+    private String eventDescription;
+    private String eventLocation;
+    private String propertyGroup;
+    private String propertyLabel;
+    private String propertyName;
+    private String propertyDefinition;
+    private String dataType;
+    private String possibleValues;
     
     public TaggingRow() {}
     
-    public TaggingRow(String event, String eventName, String purpose, String trigger, 
-                     String parameterName, String exampleValue, String parameterDescription) {
-        this.event = event;
+    public TaggingRow(String eventName, String eventCategory, String eventDescription, String eventLocation,
+                     String propertyGroup, String propertyLabel, String propertyName, String propertyDefinition,
+                     String dataType, String possibleValues) {
         this.eventName = eventName;
-        this.purpose = purpose;
-        this.trigger = trigger;
-        this.parameterName = parameterName;
-        this.exampleValue = exampleValue;
-        this.parameterDescription = parameterDescription;
+        this.eventCategory = eventCategory;
+        this.eventDescription = eventDescription;
+        this.eventLocation = eventLocation;
+        this.propertyGroup = propertyGroup;
+        this.propertyLabel = propertyLabel;
+        this.propertyName = propertyName;
+        this.propertyDefinition = propertyDefinition;
+        this.dataType = dataType;
+        this.possibleValues = possibleValues;
     }
     
     // Getters and Setters
-    public String getEvent() {
-        return event;
-    }
-    
-    public void setEvent(String event) {
-        this.event = event;
-    }
-    
     public String getEventName() {
         return eventName;
     }
@@ -39,43 +38,75 @@ public class TaggingRow {
         this.eventName = eventName;
     }
     
-    public String getPurpose() {
-        return purpose;
+    public String getEventCategory() {
+        return eventCategory;
     }
     
-    public void setPurpose(String purpose) {
-        this.purpose = purpose;
+    public void setEventCategory(String eventCategory) {
+        this.eventCategory = eventCategory;
     }
     
-    public String getTrigger() {
-        return trigger;
+    public String getEventDescription() {
+        return eventDescription;
     }
     
-    public void setTrigger(String trigger) {
-        this.trigger = trigger;
+    public void setEventDescription(String eventDescription) {
+        this.eventDescription = eventDescription;
     }
     
-    public String getParameterName() {
-        return parameterName;
+    public String getEventLocation() {
+        return eventLocation;
     }
     
-    public void setParameterName(String parameterName) {
-        this.parameterName = parameterName;
+    public void setEventLocation(String eventLocation) {
+        this.eventLocation = eventLocation;
     }
     
-    public String getExampleValue() {
-        return exampleValue;
+    public String getPropertyGroup() {
+        return propertyGroup;
     }
     
-    public void setExampleValue(String exampleValue) {
-        this.exampleValue = exampleValue;
+    public void setPropertyGroup(String propertyGroup) {
+        this.propertyGroup = propertyGroup;
     }
     
-    public String getParameterDescription() {
-        return parameterDescription;
+    public String getPropertyLabel() {
+        return propertyLabel;
     }
     
-    public void setParameterDescription(String parameterDescription) {
-        this.parameterDescription = parameterDescription;
+    public void setPropertyLabel(String propertyLabel) {
+        this.propertyLabel = propertyLabel;
+    }
+    
+    public String getPropertyName() {
+        return propertyName;
+    }
+    
+    public void setPropertyName(String propertyName) {
+        this.propertyName = propertyName;
+    }
+    
+    public String getPropertyDefinition() {
+        return propertyDefinition;
+    }
+    
+    public void setPropertyDefinition(String propertyDefinition) {
+        this.propertyDefinition = propertyDefinition;
+    }
+    
+    public String getDataType() {
+        return dataType;
+    }
+    
+    public void setDataType(String dataType) {
+        this.dataType = dataType;
+    }
+    
+    public String getPossibleValues() {
+        return possibleValues;
+    }
+    
+    public void setPossibleValues(String possibleValues) {
+        this.possibleValues = possibleValues;
     }
 }

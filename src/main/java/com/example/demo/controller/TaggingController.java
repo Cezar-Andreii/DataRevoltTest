@@ -29,25 +29,24 @@ public class TaggingController {
     public String taggingPlan(Model model) {
         // Evenimente predefinite
         List<Event> events = Arrays.asList(
-            new Event("purchase", "Purchase", "Track completed purchases", "User completes a purchase"),
+            new Event("purchase", "Purchase", "An event that contains data about the purchase made.", "Thank you page"),
             new Event("add_to_cart", "Add to Cart", "Track items added to cart", "User adds item to cart"),
             new Event("view_item", "View Item", "Track product views", "User views a product"),
             new Event("search", "Search", "Track search queries", "User performs a search"),
             new Event("login", "Login", "Track user logins", "User logs into account")
         );
         
-        // Parametri predefiniți
+        // Parametri predefiniți pentru purchase
         List<Parameter> parameters = Arrays.asList(
-            new Parameter("transaction_id", "TXN_12345", "Unique transaction identifier"),
-            new Parameter("value", "29.99", "Purchase value in currency"),
-            new Parameter("currency", "USD", "Currency code"),
-            new Parameter("item_id", "PROD_001", "Product identifier"),
-            new Parameter("item_name", "Laptop", "Product name"),
-            new Parameter("category", "Electronics", "Product category"),
-            new Parameter("quantity", "1", "Quantity purchased"),
-            new Parameter("user_id", "USER_123", "User identifier"),
-            new Parameter("session_id", "SESS_456", "Session identifier"),
-            new Parameter("timestamp", "1640995200", "Unix timestamp")
+            new Parameter("event", "purchase", "The event name."),
+            new Parameter("value", "1439.00", "The revenue of the event."),
+            new Parameter("coupon", "Summer Sale", "The coupon name/code associated with the event."),
+            new Parameter("transaction_id", "NL-23435342", "The unique identifier of a transaction."),
+            new Parameter("shipping", "10.34", "Shipping cost associated with a transaction."),
+            new Parameter("currency", "RON", "Currency of the value. Use three letter ISO 4217 format."),
+            new Parameter("affiliation", "Store Name", "The store or affiliation from which this transaction occurred."),
+            new Parameter("tax", "15.23", "Tax cost associated with a transaction."),
+            new Parameter("items", "[{itemKey: itemValue}]", "A list with the product (or products) in the shopping cart.")
         );
         
         model.addAttribute("events", events);
@@ -65,20 +64,51 @@ public class TaggingController {
         Event event = getEventByName(selectedEvent);
         
         if (event != null && selectedParameters != null) {
-            // Generăm rânduri pentru fiecare parametru selectat
+            // Verificăm dacă evenimentul există deja în listă
+            boolean eventExists = taggingRows.stream()
+                .anyMatch(row -> row.getEventName().equals(event.getEvent()));
+            
+            // Dacă evenimentul nu există, adăugăm un rând cu informațiile despre eveniment
+            if (!eventExists) {
+                TaggingRow eventRow = new TaggingRow(
+                    event.getEvent(), // eventName
+                    "Ecommerce", // eventCategory
+                    event.getPurpose(), // eventDescription
+                    event.getTrigger(), // eventLocation
+                    "Analytics", // propertyGroup
+                    "Dimension", // propertyLabel
+                    "event", // propertyName
+                    "The event name.", // propertyDefinition
+                    "String", // dataType
+                    event.getEvent() // possibleValues
+                );
+                taggingRows.add(eventRow);
+            }
+            
+            // Adăugăm rânduri pentru fiecare parametru selectat
             for (String paramName : selectedParameters) {
                 Parameter param = getParameterByName(paramName);
                 if (param != null) {
-                    TaggingRow row = new TaggingRow(
-                        event.getEvent(),
-                        event.getEventName(),
-                        event.getPurpose(),
-                        event.getTrigger(),
-                        param.getParameterName(),
-                        param.getExampleValue(),
-                        param.getParameterDescription()
-                    );
-                    taggingRows.add(row);
+                    // Verificăm dacă parametrul există deja pentru acest eveniment
+                    boolean paramExists = taggingRows.stream()
+                        .anyMatch(row -> row.getEventName().equals(event.getEvent()) && 
+                                       row.getPropertyName().equals(param.getParameterName()));
+                    
+                    if (!paramExists) {
+                        TaggingRow paramRow = new TaggingRow(
+                            "", // eventName gol pentru rândul de parametru
+                            "", // eventCategory gol pentru rândul de parametru
+                            "", // eventDescription gol pentru rândul de parametru
+                            "", // eventLocation gol pentru rândul de parametru
+                            "Analytics", // propertyGroup
+                            getPropertyLabel(param.getParameterName()), // propertyLabel
+                            param.getParameterName(), // propertyName
+                            param.getParameterDescription(), // propertyDefinition
+                            getDataType(param.getParameterName()), // dataType
+                            param.getExampleValue() // possibleValues
+                        );
+                        taggingRows.add(paramRow);
+                    }
                 }
             }
         }
@@ -88,23 +118,29 @@ public class TaggingController {
     
     @PostMapping("/update")
     public String updateTaggingRow(@RequestParam int rowIndex,
-                                 @RequestParam String event,
                                  @RequestParam String eventName,
-                                 @RequestParam String purpose,
-                                 @RequestParam String trigger,
-                                 @RequestParam String parameterName,
-                                 @RequestParam String exampleValue,
-                                 @RequestParam String parameterDescription) {
+                                 @RequestParam String eventCategory,
+                                 @RequestParam String eventDescription,
+                                 @RequestParam String eventLocation,
+                                 @RequestParam String propertyGroup,
+                                 @RequestParam String propertyLabel,
+                                 @RequestParam String propertyName,
+                                 @RequestParam String propertyDefinition,
+                                 @RequestParam String dataType,
+                                 @RequestParam String possibleValues) {
         
         if (rowIndex >= 0 && rowIndex < taggingRows.size()) {
             TaggingRow row = taggingRows.get(rowIndex);
-            row.setEvent(event);
             row.setEventName(eventName);
-            row.setPurpose(purpose);
-            row.setTrigger(trigger);
-            row.setParameterName(parameterName);
-            row.setExampleValue(exampleValue);
-            row.setParameterDescription(parameterDescription);
+            row.setEventCategory(eventCategory);
+            row.setEventDescription(eventDescription);
+            row.setEventLocation(eventLocation);
+            row.setPropertyGroup(propertyGroup);
+            row.setPropertyLabel(propertyLabel);
+            row.setPropertyName(propertyName);
+            row.setPropertyDefinition(propertyDefinition);
+            row.setDataType(dataType);
+            row.setPossibleValues(possibleValues);
         }
         
         return "redirect:/tagging";
@@ -126,26 +162,35 @@ public class TaggingController {
             TaggingRow row = taggingRows.get(rowIndex);
             
             switch (field) {
-                case "event":
-                    row.setEvent(value);
-                    break;
                 case "eventName":
                     row.setEventName(value);
                     break;
-                case "purpose":
-                    row.setPurpose(value);
+                case "eventCategory":
+                    row.setEventCategory(value);
                     break;
-                case "trigger":
-                    row.setTrigger(value);
+                case "eventDescription":
+                    row.setEventDescription(value);
                     break;
-                case "parameterName":
-                    row.setParameterName(value);
+                case "eventLocation":
+                    row.setEventLocation(value);
                     break;
-                case "exampleValue":
-                    row.setExampleValue(value);
+                case "propertyGroup":
+                    row.setPropertyGroup(value);
                     break;
-                case "parameterDescription":
-                    row.setParameterDescription(value);
+                case "propertyLabel":
+                    row.setPropertyLabel(value);
+                    break;
+                case "propertyName":
+                    row.setPropertyName(value);
+                    break;
+                case "propertyDefinition":
+                    row.setPropertyDefinition(value);
+                    break;
+                case "dataType":
+                    row.setDataType(value);
+                    break;
+                case "possibleValues":
+                    row.setPossibleValues(value);
                     break;
             }
         }
@@ -212,7 +257,7 @@ public class TaggingController {
     
     private Event getEventByName(String eventName) {
         List<Event> events = Arrays.asList(
-            new Event("purchase", "Purchase", "Track completed purchases", "User completes a purchase"),
+            new Event("purchase", "Purchase", "An event that contains data about the purchase made.", "Thank you page"),
             new Event("add_to_cart", "Add to Cart", "Track items added to cart", "User adds item to cart"),
             new Event("view_item", "View Item", "Track product views", "User views a product"),
             new Event("search", "Search", "Track search queries", "User performs a search"),
@@ -227,21 +272,57 @@ public class TaggingController {
     
     private Parameter getParameterByName(String paramName) {
         List<Parameter> parameters = Arrays.asList(
-            new Parameter("transaction_id", "TXN_12345", "Unique transaction identifier"),
-            new Parameter("value", "29.99", "Purchase value in currency"),
-            new Parameter("currency", "USD", "Currency code"),
-            new Parameter("item_id", "PROD_001", "Product identifier"),
-            new Parameter("item_name", "Laptop", "Product name"),
-            new Parameter("category", "Electronics", "Product category"),
-            new Parameter("quantity", "1", "Quantity purchased"),
-            new Parameter("user_id", "USER_123", "User identifier"),
-            new Parameter("session_id", "SESS_456", "Session identifier"),
-            new Parameter("timestamp", "1640995200", "Unix timestamp")
+            new Parameter("event", "purchase", "The event name."),
+            new Parameter("value", "1439.00", "The revenue of the event."),
+            new Parameter("coupon", "Summer Sale", "The coupon name/code associated with the event."),
+            new Parameter("transaction_id", "NL-23435342", "The unique identifier of a transaction."),
+            new Parameter("shipping", "10.34", "Shipping cost associated with a transaction."),
+            new Parameter("currency", "RON", "Currency of the value. Use three letter ISO 4217 format."),
+            new Parameter("affiliation", "Store Name", "The store or affiliation from which this transaction occurred."),
+            new Parameter("tax", "15.23", "Tax cost associated with a transaction."),
+            new Parameter("items", "[{itemKey: itemValue}]", "A list with the product (or products) in the shopping cart.")
         );
         
         return parameters.stream()
                 .filter(p -> p.getParameterName().equals(paramName))
                 .findFirst()
                 .orElse(null);
+    }
+    
+    private String getPropertyLabel(String paramName) {
+        switch (paramName) {
+            case "value":
+            case "shipping":
+            case "tax":
+                return "Metric";
+            case "event":
+            case "coupon":
+            case "transaction_id":
+            case "currency":
+            case "affiliation":
+            case "items":
+                return "Dimension";
+            default:
+                return "Dimension";
+        }
+    }
+    
+    private String getDataType(String paramName) {
+        switch (paramName) {
+            case "value":
+            case "shipping":
+            case "tax":
+                return "Numeric";
+            case "items":
+                return "List of Objects";
+            case "event":
+            case "coupon":
+            case "transaction_id":
+            case "currency":
+            case "affiliation":
+                return "String";
+            default:
+                return "String";
+        }
     }
 }
