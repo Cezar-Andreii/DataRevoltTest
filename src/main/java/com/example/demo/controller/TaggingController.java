@@ -29,9 +29,18 @@ public class TaggingController {
     public String taggingPlan(Model model) {
         // Evenimente predefinite
         List<Event> events = Arrays.asList(
-            new Event("purchase", "Purchase", "An event that contains data about the purchase made.", "Thank you page"),
-            new Event("add_to_cart", "Add to Cart", "Track items added to cart", "User adds item to cart"),
+            new Event("view_item_list", "View Item List", "Track when a user sees a list of items or products", "Product listing pages"),
             new Event("view_item", "View Item", "Track product views", "User views a product"),
+            new Event("select_item", "Select Item", "Track when a user selects an item from a list", "User selects an item"),
+            new Event("add_to_cart", "Add to Cart", "Track items added to cart", "User adds item to cart"),
+            new Event("view_cart", "View Cart", "Track when a user views their cart", "Cart page"),
+            new Event("add_to_wishlist", "Add to Wishlist", "Track when a user adds items to wishlist", "User adds item to wishlist"),
+            new Event("view_promotion", "View Promotion", "Track when a user views a promotion", "Promotion pages"),
+            new Event("select_promotion", "Select Promotion", "Track when a user selects a promotion", "User selects a promotion"),
+            new Event("begin_checkout", "Begin Checkout", "Track when a user begins the checkout process", "Checkout start"),
+            new Event("add_shipping_info", "Add Shipping Info", "Track when a user adds shipping information", "Shipping form"),
+            new Event("add_payment_info", "Add Payment Info", "Track when a user adds payment information", "Payment form"),
+            new Event("purchase", "Purchase", "An event that contains data about the purchase made.", "Thank you page"),
             new Event("search", "Search", "Track search queries", "User performs a search"),
             new Event("login", "Login", "Track user logins", "User logs into account")
         );
@@ -257,9 +266,18 @@ public class TaggingController {
     
     private Event getEventByName(String eventName) {
         List<Event> events = Arrays.asList(
-            new Event("purchase", "Purchase", "An event that contains data about the purchase made.", "Thank you page"),
-            new Event("add_to_cart", "Add to Cart", "Track items added to cart", "User adds item to cart"),
+            new Event("view_item_list", "View Item List", "Track when a user sees a list of items or products", "Product listing pages"),
             new Event("view_item", "View Item", "Track product views", "User views a product"),
+            new Event("select_item", "Select Item", "Track when a user selects an item from a list", "User selects an item"),
+            new Event("add_to_cart", "Add to Cart", "Track items added to cart", "User adds item to cart"),
+            new Event("view_cart", "View Cart", "Track when a user views their cart", "Cart page"),
+            new Event("add_to_wishlist", "Add to Wishlist", "Track when a user adds items to wishlist", "User adds item to wishlist"),
+            new Event("view_promotion", "View Promotion", "Track when a user views a promotion", "Promotion pages"),
+            new Event("select_promotion", "Select Promotion", "Track when a user selects a promotion", "User selects a promotion"),
+            new Event("begin_checkout", "Begin Checkout", "Track when a user begins the checkout process", "Checkout start"),
+            new Event("add_shipping_info", "Add Shipping Info", "Track when a user adds shipping information", "Shipping form"),
+            new Event("add_payment_info", "Add Payment Info", "Track when a user adds payment information", "Payment form"),
+            new Event("purchase", "Purchase", "An event that contains data about the purchase made.", "Thank you page"),
             new Event("search", "Search", "Track search queries", "User performs a search"),
             new Event("login", "Login", "Track user logins", "User logs into account")
         );

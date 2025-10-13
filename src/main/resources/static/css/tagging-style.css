@@ -4,6 +4,48 @@ body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
+/* Stiluri pentru logo */
+.logo-container {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin-bottom: 1rem;
+    padding-left: 0;
+}
+
+.logo-container img {
+    height: 60px;
+    width: auto;
+    max-width: 250px;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+    transition: transform 0.2s ease;
+}
+
+.logo-container img:hover {
+    transform: scale(1.05);
+}
+
+/* Responsive pentru logo */
+@media (max-width: 768px) {
+    .logo-container {
+        justify-content: center;
+        margin-bottom: 1rem;
+    }
+
+    .logo-container img {
+        height: 50px;
+        max-width: 200px;
+    }
+}
+
+@media (max-width: 480px) {
+    .logo-container img {
+        height: 40px;
+        max-width: 150px;
+    }
+}
+
 .container-fluid {
     padding: 20px;
 }

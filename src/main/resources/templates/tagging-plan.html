@@ -13,6 +13,9 @@
     <div class="container-fluid">
         <div class="row">
             <div class="col-12">
+                <div class="logo-container">
+                    <img src="/images/logo.png" alt="Logo">
+                </div>
                 <h1 class="text-center mb-4">Tagging Plan - Event Tracking</h1>
 
                 <!-- Formular pentru selectarea evenimentului și parametrilor -->
@@ -491,8 +494,30 @@
             const table = document.getElementById('taggingTable');
             const rows = table.querySelectorAll('tbody tr');
 
+            // Obține header-ul cu descrierile din prima linie
+            const descriptionRow = table.querySelector('thead tr.table-info');
+            const descriptionCells = descriptionRow ? descriptionRow.querySelectorAll('td') : [];
+
             // Folosește tab-uri în loc de virgule pentru separare
-            let csvData = 'Event\tEvent Name\tPurpose\tTrigger\tParameter Name\tExample Value\tParameter Description\n';
+            let csvData = 'Event Name\tEvent Category\tEvent Description\tEvent Location\tProperty Group\tProperty Label\tProperty Name\tProperty Definition\tData Type\tPossible Values\n';
+
+            // Adaugă linia cu descrierile din prima linie a tabelului
+            if (descriptionCells.length > 0) {
+                const descriptions = Array.from(descriptionCells).map(cell => {
+                    // Curăță textul și înlocuiește newline-urile cu spații
+                    let text = cell.textContent.trim();
+                    // Înlocuiește newline-urile și tab-urile cu spații
+                    text = text.replace(/[\n\r\t]+/g, ' ');
+                    // Înlocuiește spațiile multiple cu un singur spațiu
+                    text = text.replace(/\s+/g, ' ');
+                    return text;
+                });
+                // Exclude ultima celulă (Actions) dacă există
+                if (descriptions.length > 10) {
+                    descriptions.pop();
+                }
+                csvData += descriptions.join('\t') + '\n';
+            }
 
             rows.forEach(row => {
                 const cells = row.querySelectorAll('td input');
