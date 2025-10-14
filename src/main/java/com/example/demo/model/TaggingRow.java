@@ -11,12 +11,15 @@ public class TaggingRow {
     private String propertyDefinition;
     private String dataType;
     private String possibleValues;
+    private String codeExamples;
+    private String dataLayerStatus;
+    private String statusGA4;
     
     public TaggingRow() {}
     
     public TaggingRow(String eventName, String eventCategory, String eventDescription, String eventLocation,
                      String propertyGroup, String propertyLabel, String propertyName, String propertyDefinition,
-                     String dataType, String possibleValues) {
+                     String dataType, String possibleValues, String codeExamples, String dataLayerStatus, String statusGA4) {
         this.eventName = eventName;
         this.eventCategory = eventCategory;
         this.eventDescription = eventDescription;
@@ -27,6 +30,9 @@ public class TaggingRow {
         this.propertyDefinition = propertyDefinition;
         this.dataType = dataType;
         this.possibleValues = possibleValues;
+        this.codeExamples = codeExamples;
+        this.dataLayerStatus = dataLayerStatus;
+        this.statusGA4 = statusGA4;
     }
     
     // Getters and Setters
@@ -108,5 +114,29 @@ public class TaggingRow {
     
     public void setPossibleValues(String possibleValues) {
         this.possibleValues = possibleValues;
+    }
+    
+    public String getCodeExamples() {
+        return codeExamples;
+    }
+    
+    public void setCodeExamples(String codeExamples) {
+        this.codeExamples = codeExamples;
+    }
+    
+    public String getDataLayerStatus() {
+        return dataLayerStatus;
+    }
+    
+    public void setDataLayerStatus(String dataLayerStatus) {
+        this.dataLayerStatus = dataLayerStatus;
+    }
+    
+    public String getStatusGA4() {
+        return statusGA4;
+    }
+    
+    public void setStatusGA4(String statusGA4) {
+        this.statusGA4 = statusGA4;
     }
 }

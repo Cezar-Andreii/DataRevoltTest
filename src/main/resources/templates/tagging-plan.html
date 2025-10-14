@@ -66,6 +66,13 @@
                             <span class="badge bg-info"
                                 th:text="'Total rânduri: ' + ${#lists.size(taggingRows)}"></span>
                             <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-primary btn-sm" id="addCustomRowBtn">
+                                    <i class="bi bi-plus-circle"></i> Add Custom Row
+                                </button>
+                                <button type="button" class="btn btn-danger btn-sm" id="resetTableBtn"
+                                    th:disabled="${#lists.isEmpty(taggingRows)}">
+                                    <i class="bi bi-trash"></i> Reset Table
+                                </button>
                                 <button type="button" class="btn btn-success btn-sm" id="exportBtn"
                                     th:disabled="${#lists.isEmpty(taggingRows)}">
                                     <i class="bi bi-download"></i> Export Google Sheet
@@ -96,6 +103,9 @@
                                         <th style="width: 15%;">Property Definition</th>
                                         <th style="width: 8%;">Data Type</th>
                                         <th style="width: 10%;">Possible Values</th>
+                                        <th style="width: 15%;">Code Examples</th>
+                                        <th style="width: 8%;">DATA LAYER STATUS</th>
+                                        <th style="width: 8%;">STATUS GA4</th>
                                         <th style="width: 5%;">Actions</th>
                                     </tr>
                                     <tr class="table-info">
@@ -119,6 +129,9 @@
                                         <td><strong>Sample value of the property or all possible values. As a general
                                                 rule, when the value, for any reason, is not available, the value is set
                                                 to undefined</strong></td>
+                                        <td><strong>These are examples of how the codes should look like</strong></td>
+                                        <td><strong>Whether the event/property has been implemented or not</strong></td>
+                                        <td><strong>Whether the event/property has been implemented or not</strong></td>
                                         <td></td>
                                     </tr>
                                 </thead>
@@ -204,6 +217,32 @@
                                                 data-field="possibleValues" th:attr="data-row-index=${iterStat.index}"
                                                 th:class="${row.possibleValues == '' or row.possibleValues == null} ? 'bg-light' : ''">
                                         </td>
+                                        <td>
+                                            <textarea class="form-control form-control-sm editable-cell"
+                                                th:text="${row.codeExamples}"
+                                                th:name="'codeExamples_' + ${iterStat.index}"
+                                                th:id="'codeExamples_' + ${iterStat.index}" data-field="codeExamples"
+                                                th:attr="data-row-index=${iterStat.index}"
+                                                th:class="${row.codeExamples == '' or row.codeExamples == null} ? 'bg-light' : ''"
+                                                rows="3" placeholder="Enter code examples..."></textarea>
+                                        </td>
+                                        <td>
+                                            <input type="text" class="form-control form-control-sm editable-cell"
+                                                th:value="${row.dataLayerStatus}"
+                                                th:name="'dataLayerStatus_' + ${iterStat.index}"
+                                                th:id="'dataLayerStatus_' + ${iterStat.index}"
+                                                data-field="dataLayerStatus" th:attr="data-row-index=${iterStat.index}"
+                                                th:class="${row.dataLayerStatus == '' or row.dataLayerStatus == null} ? 'bg-light' : ''"
+                                                placeholder="yes">
+                                        </td>
+                                        <td>
+                                            <input type="text" class="form-control form-control-sm editable-cell"
+                                                th:value="${row.statusGA4}" th:name="'statusGA4_' + ${iterStat.index}"
+                                                th:id="'statusGA4_' + ${iterStat.index}" data-field="statusGA4"
+                                                th:attr="data-row-index=${iterStat.index}"
+                                                th:class="${row.statusGA4 == '' or row.statusGA4 == null} ? 'bg-light' : ''"
+                                                placeholder="yes">
+                                        </td>
                                         <td class="text-center">
                                             <div class="btn-group" role="group">
                                                 <button type="button" class="btn btn-sm btn-outline-primary edit-btn"
@@ -218,7 +257,7 @@
                                         </td>
                                     </tr>
                                     <tr th:if="${#lists.isEmpty(taggingRows)}">
-                                        <td colspan="11" class="text-center text-muted py-4">
+                                        <td colspan="14" class="text-center text-muted py-4">
                                             Nu există rânduri în tagging plan. Selectează un eveniment și parametri
                                             pentru a genera planul.
                                         </td>
@@ -398,6 +437,22 @@
                     showJsonModal();
                 });
             }
+
+            // Funcționalitate pentru butonul Add Custom Row
+            const addCustomRowBtn = document.getElementById('addCustomRowBtn');
+            if (addCustomRowBtn) {
+                addCustomRowBtn.addEventListener('click', function () {
+                    addCustomRow();
+                });
+            }
+
+            // Funcționalitate pentru butonul Reset Table
+            const resetTableBtn = document.getElementById('resetTableBtn');
+            if (resetTableBtn) {
+                resetTableBtn.addEventListener('click', function () {
+                    showResetConfirmation();
+                });
+            }
         });
 
         // Funcție pentru salvarea automată a modificărilor
@@ -499,7 +554,7 @@
             const descriptionCells = descriptionRow ? descriptionRow.querySelectorAll('td') : [];
 
             // Folosește tab-uri în loc de virgule pentru separare
-            let csvData = 'Event Name\tEvent Category\tEvent Description\tEvent Location\tProperty Group\tProperty Label\tProperty Name\tProperty Definition\tData Type\tPossible Values\n';
+            let csvData = 'Event Name\tEvent Category\tEvent Description\tEvent Location\tProperty Group\tProperty Label\tProperty Name\tProperty Definition\tData Type\tPossible Values\tCode Examples\tDATA LAYER STATUS\tSTATUS GA4\n';
 
             // Adaugă linia cu descrierile din prima linie a tabelului
             if (descriptionCells.length > 0) {
@@ -520,9 +575,9 @@
             }
 
             rows.forEach(row => {
-                const cells = row.querySelectorAll('td input');
-                if (cells.length >= 7) {
-                    // Extrage valorile din input-uri
+                const cells = row.querySelectorAll('td input, td textarea');
+                if (cells.length >= 13) {
+                    // Extrage valorile din input-uri și textarea-uri
                     const values = Array.from(cells).map(cell => cell.value);
 
                     // Folosește tab-uri pentru separare - funcționează mult mai bine cu Google Sheets
@@ -619,8 +674,8 @@
             const eventsMap = new Map();
 
             rows.forEach(row => {
-                const cells = row.querySelectorAll('td input');
-                if (cells.length >= 7) {
+                const cells = row.querySelectorAll('td input, td textarea');
+                if (cells.length >= 13) {
                     const event = cells[0].value;
                     const eventName = cells[1].value;
                     const purpose = cells[2].value;
@@ -725,6 +780,252 @@
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
+        }
+
+        // Funcție pentru adăugarea unui rând custom
+        function addCustomRow() {
+            const table = document.getElementById('taggingTable');
+            const tbody = table.querySelector('tbody');
+
+            // Obține numărul de rânduri existente pentru a genera un index nou
+            const existingRows = tbody.querySelectorAll('tr');
+            const newRowIndex = existingRows.length;
+
+            // Creează rândul nou
+            const newRow = document.createElement('tr');
+            newRow.id = 'row-' + newRowIndex;
+            newRow.className = 'table-primary';
+
+            // Creează celulele pentru rândul nou
+            const cells = [
+                { field: 'eventName', placeholder: 'Enter event name...', type: 'input' },
+                { field: 'eventCategory', placeholder: 'Enter category...', type: 'input' },
+                { field: 'eventDescription', placeholder: 'Enter description...', type: 'input' },
+                { field: 'eventLocation', placeholder: 'Enter location...', type: 'input' },
+                { field: 'propertyGroup', placeholder: 'Enter group...', type: 'input' },
+                { field: 'propertyLabel', placeholder: 'Enter label...', type: 'input' },
+                { field: 'propertyName', placeholder: 'Enter property name...', type: 'input' },
+                { field: 'propertyDefinition', placeholder: 'Enter definition...', type: 'input' },
+                { field: 'dataType', placeholder: 'Enter data type...', type: 'input' },
+                { field: 'possibleValues', placeholder: 'Enter possible values...', type: 'input' },
+                { field: 'codeExamples', placeholder: 'Enter code examples...', type: 'textarea' },
+                { field: 'dataLayerStatus', placeholder: 'yes', type: 'input' },
+                { field: 'statusGA4', placeholder: 'yes', type: 'input' }
+            ];
+
+            cells.forEach((cell, index) => {
+                const td = document.createElement('td');
+                let input;
+
+                if (cell.type === 'textarea') {
+                    input = document.createElement('textarea');
+                    input.rows = 3;
+                } else {
+                    input = document.createElement('input');
+                    input.type = 'text';
+                }
+
+                input.className = 'form-control form-control-sm editable-cell';
+                input.name = cell.field + '_' + newRowIndex;
+                input.id = cell.field + '_' + newRowIndex;
+                input.setAttribute('data-field', cell.field);
+                input.setAttribute('data-row-index', newRowIndex);
+                input.placeholder = cell.placeholder;
+
+                // Adaugă event listener pentru salvarea automată
+                input.addEventListener('blur', function () {
+                    const field = this.getAttribute('data-field');
+                    const value = this.value;
+                    const rowIndex = this.getAttribute('data-row-index');
+                    saveCellChange(rowIndex, field, value);
+                });
+
+                // Adaugă event listener pentru dublu click
+                input.addEventListener('dblclick', function () {
+                    this.focus();
+                    this.select();
+                });
+
+                td.appendChild(input);
+                newRow.appendChild(td);
+            });
+
+            // Adaugă celula cu butoanele de acțiune
+            const actionTd = document.createElement('td');
+            actionTd.innerHTML = `
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-primary btn-sm edit-btn" 
+                            data-row-index="${newRowIndex}">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button type="button" class="btn btn-outline-danger btn-sm delete-btn" 
+                            data-row-index="${newRowIndex}">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            `;
+            newRow.appendChild(actionTd);
+
+            // Adaugă rândul la tabel
+            tbody.appendChild(newRow);
+
+            // Adaugă event listeners pentru butoanele din rândul nou
+            const editBtn = newRow.querySelector('.edit-btn');
+            const deleteBtn = newRow.querySelector('.delete-btn');
+
+            if (editBtn) {
+                editBtn.addEventListener('click', function () {
+                    const rowIndex = this.getAttribute('data-row-index');
+                    const row = document.getElementById('row-' + rowIndex);
+                    const inputs = row.querySelectorAll('.editable-cell');
+                    inputs.forEach(input => {
+                        input.focus();
+                        input.select();
+                    });
+                });
+            }
+
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', function () {
+                    const rowIndex = this.getAttribute('data-row-index');
+                    document.getElementById('deleteRowIndex').value = rowIndex;
+                    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+                });
+            }
+
+            // Focus pe prima celulă
+            const firstInput = newRow.querySelector('.editable-cell');
+            if (firstInput) {
+                firstInput.focus();
+            }
+
+            // Actualizează contorul de rânduri
+            const badge = document.querySelector('.badge.bg-info');
+            if (badge) {
+                const currentCount = parseInt(badge.textContent.match(/\d+/)[0]);
+                badge.textContent = 'Total rânduri: ' + (currentCount + 1);
+            }
+
+            // Salvează rândul custom în backend când utilizatorul completează cel puțin un câmp
+            const inputs = newRow.querySelectorAll('.editable-cell');
+            let isRowSaved = false; // Flag pentru a evita salvarea multiplă
+
+            inputs.forEach(input => {
+                input.addEventListener('blur', function () {
+                    // Verifică dacă cel puțin un câmp are valoare și rândul nu a fost deja salvat
+                    const hasValue = Array.from(inputs).some(inp => inp.value.trim() !== '');
+                    if (hasValue && !isRowSaved) {
+                        saveCustomRowToBackend(newRowIndex);
+                        isRowSaved = true; // Marchează rândul ca fiind salvat
+                    }
+                });
+            });
+        }
+
+        // Funcție pentru salvarea rândului custom în backend
+        function saveCustomRowToBackend(rowIndex) {
+            const row = document.getElementById('row-' + rowIndex);
+            const inputs = row.querySelectorAll('.editable-cell');
+
+            const data = {
+                eventName: inputs[0].value,
+                eventCategory: inputs[1].value,
+                eventDescription: inputs[2].value,
+                eventLocation: inputs[3].value,
+                propertyGroup: inputs[4].value,
+                propertyLabel: inputs[5].value,
+                propertyName: inputs[6].value,
+                propertyDefinition: inputs[7].value,
+                dataType: inputs[8].value,
+                possibleValues: inputs[9].value,
+                codeExamples: inputs[10].value,
+                dataLayerStatus: inputs[11].value,
+                statusGA4: inputs[12].value
+            };
+
+            // Trimite datele către backend
+            fetch('/tagging/add-custom-row', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: Object.keys(data).map(key => `${key}=${encodeURIComponent(data[key])}`).join('&')
+            })
+                .then(response => {
+                    if (response.ok) {
+                        console.log('Custom row saved successfully');
+                    } else {
+                        console.error('Failed to save custom row');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error saving custom row:', error);
+                });
+        }
+
+        // Funcție pentru afișarea confirmării de reset
+        function showResetConfirmation() {
+            const modalHtml = `
+                <div class="modal fade" id="resetModal" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Confirmare Reset</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="alert alert-warning">
+                                    <i class="bi bi-exclamation-triangle"></i>
+                                    <strong>Atenție!</strong> Această acțiune va șterge toate rândurile din tabel.
+                                </div>
+                                <p>Ești sigur că vrei să resetezi tabelul? Această acțiune nu poate fi anulată.</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anulează</button>
+                                <button type="button" class="btn btn-danger" onclick="resetTable()">
+                                    <i class="bi bi-trash"></i> Șterge Tot
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Adaugă modalul la DOM
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+            // Afișează modalul
+            const modal = new bootstrap.Modal(document.getElementById('resetModal'));
+            modal.show();
+
+            // Șterge modalul când se închide
+            document.getElementById('resetModal').addEventListener('hidden.bs.modal', function () {
+                this.remove();
+            });
+        }
+
+        // Funcție pentru resetarea tabelului
+        function resetTable() {
+            // Trimite request către backend pentru reset
+            fetch('/tagging/reset', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                }
+            })
+                .then(response => {
+                    if (response.ok) {
+                        // Reîncarcă pagina pentru a actualiza tabelul
+                        window.location.reload();
+                    } else {
+                        console.error('Failed to reset table');
+                        alert('Eroare la resetarea tabelului!');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error resetting table:', error);
+                    alert('Eroare la resetarea tabelului: ' + error.message);
+                });
         }
     </script>
 </body>
