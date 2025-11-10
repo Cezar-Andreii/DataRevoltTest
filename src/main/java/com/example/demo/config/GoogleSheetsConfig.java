@@ -67,15 +67,13 @@ public class GoogleSheetsConfig {
             // Prioritate 5: Fallback la fișierul din resources (pentru development local)
             else {
                 System.out.println("GoogleSheetsConfig: Caut fișierul credentials.json în resources...");
-        ClassPathResource resource = new ClassPathResource("credentials.json");
-        
-        if (!resource.exists()) {
-            System.err.println("GoogleSheetsConfig: Nu s-au găsit credențiale!");
-            System.err.println("GoogleSheetsConfig: Opțiuni disponibile:");
-            System.err.println("  1. Setează variabila de mediu GOOGLE_CREDENTIALS_JSON (recomandat pentru production)");
-            System.err.println("  2. Setează variabila de mediu GOOGLE_CREDENTIALS_PATH");
-            System.err.println("  3. Plasează credentials.json în src/main/resources/ (pentru development)");
-        }
+                ClassPathResource resource = new ClassPathResource("credentials.json");
+                
+                if (!resource.exists()) {
+                    System.out.println("GoogleSheetsConfig: ⚠️ Nu s-au găsit credențiale Google. Google Sheets API va fi dezactivat.");
+                    System.out.println("GoogleSheetsConfig: Aplicația va funcționa normal, dar funcționalitățile Google Sheets nu vor fi disponibile.");
+                    return null;
+                }
                 
                 System.out.println("GoogleSheetsConfig: Fișierul credentials.json găsit în resources, încarc credențialele...");
                 credentialsStream = resource.getInputStream();
@@ -176,7 +174,8 @@ public class GoogleSheetsConfig {
             } else {
                 ClassPathResource resource = new ClassPathResource("credentials.json");
                 if (!resource.exists()) {
-                    throw new IOException("Nu s-au găsit credențiale Google pentru Drive API.");
+                    System.out.println("GoogleSheetsConfig: ⚠️ Nu s-au găsit credențiale Google. Google Drive API va fi dezactivat.");
+                    return null;
                 }
                 credentialsStream = resource.getInputStream();
                 sourceInfo = "resources/credentials.json";

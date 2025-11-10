@@ -23,7 +23,7 @@ public class TaggingController {
     
     private List<TaggingRow> taggingRows = new ArrayList<>();
     
-    @Autowired
+    @Autowired(required = false)
     private GoogleSheetsService googleSheetsService;
     
     @GetMapping
@@ -294,6 +294,10 @@ public class TaggingController {
             return "redirect:/tagging?error=no-data";
         }
         
+        if (googleSheetsService == null) {
+            return "redirect:/tagging?error=google-sheets-not-configured";
+        }
+        
         try {
             System.out.println("Încep să creez Google Sheet cu " + taggingRows.size() + " rânduri...");
             
@@ -323,6 +327,10 @@ public class TaggingController {
     public String exportToGoogleSheetWithData(Model model) {
         if (taggingRows.isEmpty()) {
             return "redirect:/tagging?error=no-data";
+        }
+        
+        if (googleSheetsService == null) {
+            return "redirect:/tagging?error=google-sheets-not-configured";
         }
         
         // Generează CSV data
@@ -367,7 +375,13 @@ public class TaggingController {
             return ResponseEntity.badRequest().body("No data to export");
         }
         
-        String csvData = googleSheetsService.generateCSVData(taggingRows);
+        String csvData;
+        if (googleSheetsService != null) {
+            csvData = googleSheetsService.generateCSVData(taggingRows);
+        } else {
+            // Generează CSV manual dacă serviciul nu este disponibil
+            csvData = generateCSVDataManually(taggingRows);
+        }
         
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
@@ -376,6 +390,34 @@ public class TaggingController {
         return ResponseEntity.ok()
                 .headers(headers)
                 .body(csvData);
+    }
+    
+    private String generateCSVDataManually(List<TaggingRow> rows) {
+        StringBuilder csv = new StringBuilder();
+        csv.append("Event Name,Event Category,Event Description,Event Location,Property Group,Property Label,Property Name,Property Definition,Data Type,Possible Values,Code Examples,DATA LAYER STATUS,STATUS GA4\n");
+        
+        for (TaggingRow row : rows) {
+            csv.append("\"").append(escapeCSV(row.getEventName() != null ? row.getEventName() : "")).append("\",");
+            csv.append("\"").append(escapeCSV(row.getEventCategory() != null ? row.getEventCategory() : "")).append("\",");
+            csv.append("\"").append(escapeCSV(row.getEventDescription() != null ? row.getEventDescription() : "")).append("\",");
+            csv.append("\"").append(escapeCSV(row.getEventLocation() != null ? row.getEventLocation() : "")).append("\",");
+            csv.append("\"").append(escapeCSV(row.getPropertyGroup() != null ? row.getPropertyGroup() : "")).append("\",");
+            csv.append("\"").append(escapeCSV(row.getPropertyLabel() != null ? row.getPropertyLabel() : "")).append("\",");
+            csv.append("\"").append(escapeCSV(row.getPropertyName() != null ? row.getPropertyName() : "")).append("\",");
+            csv.append("\"").append(escapeCSV(row.getPropertyDefinition() != null ? row.getPropertyDefinition() : "")).append("\",");
+            csv.append("\"").append(escapeCSV(row.getDataType() != null ? row.getDataType() : "")).append("\",");
+            csv.append("\"").append(escapeCSV(row.getPossibleValues() != null ? row.getPossibleValues() : "")).append("\",");
+            csv.append("\"").append(escapeCSV(row.getCodeExamples() != null ? row.getCodeExamples() : "")).append("\",");
+            csv.append("\"").append(escapeCSV(row.getDataLayerStatus() != null ? row.getDataLayerStatus() : "")).append("\",");
+            csv.append("\"").append(escapeCSV(row.getStatusGA4() != null ? row.getStatusGA4() : "")).append("\"\n");
+        }
+        
+        return csv.toString();
+    }
+    
+    private String escapeCSV(String value) {
+        if (value == null) return "";
+        return value.replace("\"", "\"\"").replace("\n", " ").replace("\r", "");
     }
     
     private Event getEventByName(String eventName) {
