@@ -31,3 +31,14 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Google Credentials - DO NOT COMMIT ###
+src/main/resources/credentials.json
+**/credentials.json
+*.json
+!credentials.json.example
+!pom.xml
+!package.json
+!package-lock.json
+.tokens/
+**/client_secret.json

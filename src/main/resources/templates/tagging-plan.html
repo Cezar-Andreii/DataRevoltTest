@@ -18,41 +18,84 @@
                 </div>
                 <h1 class="text-center mb-4">Tagging Plan - Event Tracking</h1>
 
-                <!-- Formular pentru selectarea evenimentului și parametrilor -->
+                <!-- Afișarea erorilor -->
+                <div th:if="${param.error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <span th:if="${param.error == 'google-sheets-error'}">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>Eroare la crearea Google Sheet:</strong>
+                        <span th:text="${param.message}">Eroare necunoscută</span>
+                        <br><small>Verifică console-ul pentru detalii suplimentare.</small>
+                    </span>
+                    <span th:if="${param.error == 'no-data'}">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Nu există date pentru export.</strong> Generează mai întâi un tagging plan.
+                    </span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+
+                <!-- Formular pentru selectarea evenimentelor -->
                 <div class="card mb-4">
                     <div class="card-header">
-                        <h5>Selectează Eveniment și Parametri</h5>
+                        <h5>Selectează Evenimente pentru Generare Automată</h5>
+                        <small class="text-muted">Selectează unul sau mai multe evenimente. Parametrii oficiali vor fi
+                            adăugați automat.</small>
                     </div>
                     <div class="card-body">
                         <form th:action="@{/tagging/generate}" method="post">
                             <div class="row">
-                                <div class="col-md-6">
-                                    <label for="selectedEvent" class="form-label">Eveniment:</label>
-                                    <select class="form-select" id="selectedEvent" name="selectedEvent" required>
-                                        <option value="">-- Selectează un eveniment --</option>
-                                        <option th:each="event : ${events}" th:value="${event.event}"
-                                            th:text="${event.eventName}"></option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Parametri:</label>
-                                    <div class="parameter-checkboxes" style="max-height: 200px; overflow-y: auto;">
-                                        <div th:each="parameter : ${parameters}" class="form-check">
+                                <div class="col-12">
+                                    <label class="form-label">Evenimente disponibile:</label>
+                                    <div class="events-grid"
+                                        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; max-height: 400px; overflow-y: auto; padding: 10px; border: 1px solid #dee2e6; border-radius: 8px; background-color: #f8f9fa;">
+                                        <div th:each="event : ${events}" class="form-check event-card"
+                                            style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e9ecef; transition: all 0.2s ease;">
                                             <input class="form-check-input" type="checkbox"
-                                                th:id="'param_' + ${parameter.parameterName}"
-                                                th:name="selectedParameters" th:value="${parameter.parameterName}">
-                                            <label class="form-check-label"
-                                                th:for="'param_' + ${parameter.parameterName}">
-                                                <strong th:text="${parameter.parameterName}"></strong> -
-                                                <span th:text="${parameter.parameterDescription}"
-                                                    class="text-muted"></span>
+                                                th:id="'event_' + ${event.event}" th:name="selectedEvents"
+                                                th:value="${event.event}" style="transform: scale(1.2);">
+                                            <label class="form-check-label" th:for="'event_' + ${event.event}"
+                                                style="cursor: pointer; width: 100%;">
+                                                <div class="event-info">
+                                                    <div class="event-name"
+                                                        style="font-weight: bold; color: #495057; margin-bottom: 5px;"
+                                                        th:text="${event.eventName}"></div>
+                                                    <div class="event-description"
+                                                        style="font-size: 0.9em; color: #6c757d; margin-bottom: 8px;"
+                                                        th:text="${event.purpose}"></div>
+                                                    <div class="event-trigger"
+                                                        style="font-size: 0.8em; color: #868e96; font-style: italic;"
+                                                        th:text="'Trigger: ' + ${event.trigger}"></div>
+                                                </div>
                                             </label>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <button type="button" class="btn btn-outline-secondary btn-sm"
+                                                    id="selectAllBtn">Selectează Tot</button>
+                                                <button type="button" class="btn btn-outline-secondary btn-sm"
+                                                    id="deselectAllBtn">Deselectează Tot</button>
+                                                <button type="button" class="btn btn-outline-success btn-sm"
+                                                    id="createCustomEventBtn">
+                                                    <i class="bi bi-plus-circle"></i> Creează Event Custom
+                                                </button>
+                                            </div>
+                                            <div>
+                                                <span class="badge bg-info" id="selectedCount">0 evenimente
+                                                    selectate</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="mt-3">
-                                <button type="submit" class="btn btn-primary">Generează Tagging Plan</button>
+                            <div class="mt-4 d-flex gap-2 align-items-center">
+                                <button type="button" class="btn btn-primary btn-lg" id="generateTableBtn">
+                                    <i class="bi bi-magic"></i> Generează Tabel cu Parametrii Oficiali
+                                </button>
+                                <a href="https://developers.google.com/analytics/devguides/collection/ga4/reference/events?sjid=1480311239367543508-EU&client_type=gtag&authuser=1&hl=en#purchase"
+                                    target="_blank" class="btn btn-outline-primary btn-lg">
+                                    <i class="bi bi-book"></i> Link către documentația oficială
+                                </a>
                             </div>
                         </form>
                     </div>
@@ -75,7 +118,11 @@
                                 </button>
                                 <button type="button" class="btn btn-success btn-sm" id="exportBtn"
                                     th:disabled="${#lists.isEmpty(taggingRows)}">
-                                    <i class="bi bi-download"></i> Export Google Sheet
+                                    <i class="bi bi-google"></i> Creează Google Sheet
+                                </button>
+                                <button type="button" class="btn btn-outline-primary btn-sm" id="exportGoogleManualBtn"
+                                    th:disabled="${#lists.isEmpty(taggingRows)}">
+                                    <i class="bi bi-clipboard"></i> Export Google fără API
                                 </button>
                                 <button type="button" class="btn btn-outline-success btn-sm" id="exportCsvBtn"
                                     th:disabled="${#lists.isEmpty(taggingRows)}">
@@ -265,6 +312,7 @@
                                 </tbody>
                             </table>
                         </div>
+
                     </div>
                 </div>
 
@@ -348,6 +396,286 @@
         </div>
     </div>
 
+    <!-- Modal pentru selectarea opțiunilor din array-ul de items -->
+    <div class="modal fade" id="itemsArrayModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Ce să conțină array-ul de items?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-3">Selectează opțiunile pe care dorești să le includi în array-ul de items:</p>
+
+                    <!-- Parametri standard -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="item_id" value="item_id" checked>
+                                <label class="form-check-label" for="item_id">item_id</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="item_name" value="item_name"
+                                    checked>
+                                <label class="form-check-label" for="item_name">item_name</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="item_category" value="item_category"
+                                    checked>
+                                <label class="form-check-label" for="item_category">item_category</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="item_category2"
+                                    value="item_category2">
+                                <label class="form-check-label" for="item_category2">item_category2</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="item_category3"
+                                    value="item_category3">
+                                <label class="form-check-label" for="item_category3">item_category3</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="item_brand" value="item_brand">
+                                <label class="form-check-label" for="item_brand">item_brand</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="item_variant" value="item_variant">
+                                <label class="form-check-label" for="item_variant">item_variant</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="item_list_id" value="item_list_id">
+                                <label class="form-check-label" for="item_list_id">item_list_id</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="item_list_name"
+                                    value="item_list_name">
+                                <label class="form-check-label" for="item_list_name">item_list_name</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="price" value="price">
+                                <label class="form-check-label" for="price">price</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="quantity" value="quantity">
+                                <label class="form-check-label" for="quantity">quantity</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="discount" value="discount">
+                                <label class="form-check-label" for="discount">discount</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="affiliation" value="affiliation">
+                                <label class="form-check-label" for="affiliation">affiliation</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="coupon" value="coupon">
+                                <label class="form-check-label" for="coupon">coupon</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="index" value="index">
+                                <label class="form-check-label" for="index">index</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Opțiune pentru parametri custom -->
+                    <hr class="my-3">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Adaugă parametru custom:</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="customItemParam"
+                                placeholder="ex: item_color, item_size, etc.">
+                            <button type="button" class="btn btn-outline-secondary" id="addCustomItemBtn">
+                                <i class="bi bi-plus-circle"></i> Adaugă
+                            </button>
+                        </div>
+                        <small class="text-muted">Parametrii custom adăugați vor apărea mai jos.</small>
+                    </div>
+
+                    <!-- Lista parametrilor custom adăugați -->
+                    <div id="customItemsList" class="mb-3">
+                        <!-- Parametrii custom vor fi adăugați aici dinamic -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anulează</button>
+                    <button type="button" class="btn btn-primary" id="confirmGenerateBtn">
+                        <i class="bi bi-check"></i> Confirmă și Generează
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal pentru crearea unui event custom -->
+    <div class="modal fade" id="createCustomEventModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-plus-circle"></i> Creează Event Custom
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Completează toate câmpurile pentru a crea un event custom în tabel.</strong>
+                        <p class="mb-0">Eventul va fi adăugat în tabel după confirmare.</p>
+                    </div>
+
+                    <form id="customEventForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="custom_eventName" class="form-label fw-bold">
+                                    Event Name <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control" id="custom_eventName"
+                                    placeholder="ex: purchase, view_item, add_to_cart" required>
+                                <small class="text-muted">Any meaningful action a user takes within your product</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="custom_eventCategory" class="form-label fw-bold">
+                                    Event Category
+                                </label>
+                                <input type="text" class="form-control" id="custom_eventCategory"
+                                    placeholder="ex: Ecommerce, Engagement, etc.">
+                                <small class="text-muted">General category of the event</small>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="custom_eventDescription" class="form-label fw-bold">
+                                    Event Description
+                                </label>
+                                <textarea class="form-control" id="custom_eventDescription" rows="2"
+                                    placeholder="Description of the event being performed"></textarea>
+                                <small class="text-muted">Description of the event (for any given end user to
+                                    understand)</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="custom_eventLocation" class="form-label fw-bold">
+                                    Event Location
+                                </label>
+                                <input type="text" class="form-control" id="custom_eventLocation"
+                                    placeholder="ex: /checkout, /product, etc.">
+                                <small class="text-muted">The pages where the event can trigger</small>
+                            </div>
+                        </div>
+
+                        <hr class="my-3">
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="custom_propertyGroup" class="form-label fw-bold">
+                                    Property Group
+                                </label>
+                                <input type="text" class="form-control" id="custom_propertyGroup"
+                                    placeholder="ex: Analytics, Custom">
+                                <small class="text-muted">Analytics or Custom Property</small>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="custom_propertyLabel" class="form-label fw-bold">
+                                    Property Label
+                                </label>
+                                <input type="text" class="form-control" id="custom_propertyLabel"
+                                    placeholder="ex: Metric, Dimension">
+                                <small class="text-muted">Metric or Dimension</small>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="custom_propertyName" class="form-label fw-bold">
+                                    Property Name <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control" id="custom_propertyName"
+                                    placeholder="ex: event, value, transaction_id" required>
+                                <small class="text-muted">Any rich metadata associated to the event</small>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label for="custom_propertyDefinition" class="form-label fw-bold">
+                                    Property Definition
+                                </label>
+                                <textarea class="form-control" id="custom_propertyDefinition" rows="2"
+                                    placeholder="Description of the property associated with the event"></textarea>
+                                <small class="text-muted">Description of the property (for any given end user to
+                                    understand)</small>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="custom_dataType" class="form-label fw-bold">
+                                    Data Type
+                                </label>
+                                <select class="form-select" id="custom_dataType">
+                                    <option value="String">String</option>
+                                    <option value="Numeric">Numeric</option>
+                                    <option value="Boolean">Boolean</option>
+                                    <option value="List of Objects">List of Objects</option>
+                                    <option value="Object">Object</option>
+                                    <option value="Date">Date</option>
+                                </select>
+                                <small class="text-muted">One of six possible data types</small>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="custom_possibleValues" class="form-label fw-bold">
+                                    Possible Values
+                                </label>
+                                <input type="text" class="form-control" id="custom_possibleValues"
+                                    placeholder="ex: 'yes', 'no', 'pending', etc.">
+                                <small class="text-muted">Sample value or all possible values</small>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="custom_codeExamples" class="form-label fw-bold">
+                                    Code Examples
+                                </label>
+                                <textarea class="form-control font-monospace" id="custom_codeExamples" rows="2"
+                                    placeholder="JavaScript code example"></textarea>
+                                <small class="text-muted">Examples of how the codes should look like</small>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="custom_dataLayerStatus" class="form-label fw-bold">
+                                    DATA LAYER STATUS
+                                </label>
+                                <select class="form-select" id="custom_dataLayerStatus">
+                                    <option value="yes">yes</option>
+                                    <option value="no">no</option>
+                                    <option value="pending">pending</option>
+                                </select>
+                                <small class="text-muted">Whether the event/property has been implemented or not</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="custom_statusGA4" class="form-label fw-bold">
+                                    STATUS GA4
+                                </label>
+                                <select class="form-select" id="custom_statusGA4">
+                                    <option value="yes">yes</option>
+                                    <option value="no">no</option>
+                                    <option value="pending">pending</option>
+                                </select>
+                                <small class="text-muted">Whether the event/property has been implemented or not</small>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anulează</button>
+                    <button type="button" class="btn btn-success" id="confirmCustomEventBtn">
+                        <i class="bi bi-check-circle"></i> Adaugă Event în Tabel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css"></script>
     <script>
@@ -359,6 +687,213 @@
             const exportBtn = document.getElementById('exportBtn');
             const exportCsvBtn = document.getElementById('exportCsvBtn');
             const exportJsonBtn = document.getElementById('exportJsonBtn');
+
+            // Funcționalitate pentru selectarea evenimentelor
+            const eventCheckboxes = document.querySelectorAll('input[name="selectedEvents"]');
+            const selectAllBtn = document.getElementById('selectAllBtn');
+            const deselectAllBtn = document.getElementById('deselectAllBtn');
+            const selectedCount = document.getElementById('selectedCount');
+
+            // Actualizează contorul de evenimente selectate
+            function updateSelectedCount() {
+                const selected = document.querySelectorAll('input[name="selectedEvents"]:checked');
+                selectedCount.textContent = selected.length + ' evenimente selectate';
+                selectedCount.className = selected.length > 0 ? 'badge bg-success' : 'badge bg-info';
+            }
+
+            // Adaugă event listeners pentru checkbox-uri
+            eventCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function () {
+                    updateSelectedCount();
+                    // Adaugă efect vizual pentru card-ul selectat
+                    const card = this.closest('.event-card');
+                    if (this.checked) {
+                        card.style.backgroundColor = '#e3f2fd';
+                        card.style.borderColor = '#2196f3';
+                        card.style.transform = 'scale(1.02)';
+                    } else {
+                        card.style.backgroundColor = 'white';
+                        card.style.borderColor = '#e9ecef';
+                        card.style.transform = 'scale(1)';
+                    }
+                });
+            });
+
+            // Butonul Selectează Tot
+            if (selectAllBtn) {
+                selectAllBtn.addEventListener('click', function () {
+                    eventCheckboxes.forEach(checkbox => {
+                        checkbox.checked = true;
+                        const card = checkbox.closest('.event-card');
+                        card.style.backgroundColor = '#e3f2fd';
+                        card.style.borderColor = '#2196f3';
+                        card.style.transform = 'scale(1.02)';
+                    });
+                    updateSelectedCount();
+                });
+            }
+
+            // Butonul Deselectează Tot
+            if (deselectAllBtn) {
+                deselectAllBtn.addEventListener('click', function () {
+                    eventCheckboxes.forEach(checkbox => {
+                        checkbox.checked = false;
+                        const card = checkbox.closest('.event-card');
+                        card.style.backgroundColor = 'white';
+                        card.style.borderColor = '#e9ecef';
+                        card.style.transform = 'scale(1)';
+                    });
+                    updateSelectedCount();
+                });
+            }
+
+            // Inițializează contorul
+            updateSelectedCount();
+
+            // Funcționalitate pentru butonul Generează Tabel
+            const generateTableBtn = document.getElementById('generateTableBtn');
+            if (generateTableBtn) {
+                generateTableBtn.addEventListener('click', function () {
+                    // Verifică dacă sunt selectate evenimente
+                    const selectedEvents = document.querySelectorAll('input[name="selectedEvents"]:checked');
+                    if (selectedEvents.length === 0) {
+                        alert('Te rugăm să selectezi cel puțin un eveniment!');
+                        return;
+                    }
+
+                    // Afișează modalul pentru selectarea opțiunilor din array-ul de items
+                    const itemsModal = new bootstrap.Modal(document.getElementById('itemsArrayModal'));
+                    itemsModal.show();
+                });
+            }
+
+            // Funcționalitate pentru adăugarea parametrilor custom
+            const addCustomItemBtn = document.getElementById('addCustomItemBtn');
+            const customItemParam = document.getElementById('customItemParam');
+            const customItemsList = document.getElementById('customItemsList');
+            const customItemsSet = new Set(); // Pentru a evita duplicate
+
+            if (addCustomItemBtn && customItemParam && customItemsList) {
+                addCustomItemBtn.addEventListener('click', function () {
+                    const customParam = customItemParam.value.trim();
+
+                    if (!customParam) {
+                        alert('Te rugăm să introduci un nume pentru parametrul custom!');
+                        return;
+                    }
+
+                    // Verifică dacă parametrul nu există deja
+                    if (customItemsSet.has(customParam)) {
+                        alert('Acest parametru a fost deja adăugat!');
+                        return;
+                    }
+
+                    // Adaugă parametrul în listă
+                    customItemsSet.add(customParam);
+
+                    // Creează elementul pentru parametrul custom
+                    const customItemDiv = document.createElement('div');
+                    customItemDiv.className = 'form-check mb-2';
+                    customItemDiv.id = 'custom-item-' + customParam.replace(/[^a-zA-Z0-9]/g, '_');
+                    customItemDiv.innerHTML = `
+                        <input class="form-check-input custom-item-checkbox" type="checkbox" 
+                               id="custom_${customParam.replace(/[^a-zA-Z0-9]/g, '_')}" 
+                               value="${customParam}" checked>
+                        <label class="form-check-label" for="custom_${customParam.replace(/[^a-zA-Z0-9]/g, '_')}">
+                            ${customParam} <span class="badge bg-secondary">custom</span>
+                        </label>
+                        <button type="button" class="btn btn-sm btn-outline-danger ms-2 remove-custom-item" 
+                                data-param="${customParam}">
+                            <i class="bi bi-x"></i>
+                        </button>
+                    `;
+
+                    customItemsList.appendChild(customItemDiv);
+
+                    // Reset input
+                    customItemParam.value = '';
+
+                    // Adaugă event listener pentru butonul de ștergere
+                    const removeBtn = customItemDiv.querySelector('.remove-custom-item');
+                    removeBtn.addEventListener('click', function () {
+                        customItemsSet.delete(customParam);
+                        customItemDiv.remove();
+                    });
+
+                    // Permite Enter pentru a adăuga
+                    customItemParam.addEventListener('keypress', function (e) {
+                        if (e.key === 'Enter') {
+                            addCustomItemBtn.click();
+                        }
+                    });
+                });
+            }
+
+            // Funcționalitate pentru butonul de confirmare din modal
+            const confirmGenerateBtn = document.getElementById('confirmGenerateBtn');
+            if (confirmGenerateBtn) {
+                confirmGenerateBtn.addEventListener('click', function () {
+                    // Obține opțiunile selectate (standard)
+                    const selectedItems = [];
+
+                    // Parametri standard
+                    const standardItems = [
+                        'item_id', 'item_name', 'item_category', 'item_category2', 'item_category3',
+                        'item_brand', 'item_variant', 'item_list_id', 'item_list_name',
+                        'price', 'quantity', 'discount', 'affiliation', 'coupon', 'index'
+                    ];
+
+                    standardItems.forEach(itemId => {
+                        const checkbox = document.getElementById(itemId);
+                        if (checkbox && checkbox.checked) {
+                            selectedItems.push(itemId);
+                        }
+                    });
+
+                    // Parametri custom
+                    const customCheckboxes = document.querySelectorAll('.custom-item-checkbox:checked');
+                    customCheckboxes.forEach(checkbox => {
+                        selectedItems.push(checkbox.value);
+                    });
+
+                    // Verifică dacă cel puțin o opțiune este selectată
+                    if (selectedItems.length === 0) {
+                        alert('Te rugăm să selectezi cel puțin o opțiune pentru array-ul de items!');
+                        return;
+                    }
+
+                    // Obține evenimentele selectate
+                    const selectedEvents = document.querySelectorAll('input[name="selectedEvents"]:checked');
+                    const eventValues = Array.from(selectedEvents).map(cb => cb.value);
+
+                    // Creează un formular ascuns și trimite-l
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = '/tagging/generate';
+
+                    // Adaugă evenimentele selectate
+                    eventValues.forEach(eventValue => {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'selectedEvents';
+                        input.value = eventValue;
+                        form.appendChild(input);
+                    });
+
+                    // Adaugă opțiunile selectate pentru items
+                    selectedItems.forEach(item => {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'selectedItems';
+                        input.value = item;
+                        form.appendChild(input);
+                    });
+
+                    // Adaugă formularul la DOM și trimite-l
+                    document.body.appendChild(form);
+                    form.submit();
+                });
+            }
 
             // Editare inline directă
             editableCells.forEach(cell => {
@@ -417,8 +952,8 @@
             // Funcționalitate pentru export
             if (exportBtn) {
                 exportBtn.addEventListener('click', function () {
-                    // Afișează modal de confirmare pentru export
-                    showExportModal();
+                    // Redirecționează direct către endpoint-ul de export
+                    window.location.href = '/tagging/export-google-sheet';
                 });
             }
 
@@ -435,6 +970,84 @@
                 exportJsonBtn.addEventListener('click', function () {
                     // Afișează modal cu JSON
                     showJsonModal();
+                });
+            }
+
+            // Funcționalitate pentru export Google fără API
+            const exportGoogleManualBtn = document.getElementById('exportGoogleManualBtn');
+            if (exportGoogleManualBtn) {
+                exportGoogleManualBtn.addEventListener('click', function () {
+                    // Afișează modal cu datele pentru copiere manuală
+                    showDataModal();
+                });
+            }
+
+            // Funcționalitate pentru butonul "Creează Event Custom" lângă evenimente
+            const createCustomEventBtn = document.getElementById('createCustomEventBtn');
+            if (createCustomEventBtn) {
+                createCustomEventBtn.addEventListener('click', function () {
+                    // Deschide modalul pentru event custom
+                    const customEventModal = new bootstrap.Modal(document.getElementById('createCustomEventModal'));
+                    customEventModal.show();
+                });
+            }
+
+            // Funcționalitate pentru confirmarea eventului custom
+            const confirmCustomEventBtn = document.getElementById('confirmCustomEventBtn');
+            if (confirmCustomEventBtn) {
+                confirmCustomEventBtn.addEventListener('click', function () {
+                    const form = document.getElementById('customEventForm');
+
+                    // Verifică dacă formularul este valid
+                    if (!form.checkValidity()) {
+                        form.reportValidity();
+                        return;
+                    }
+
+                    // Obține valorile din formular
+                    const eventData = {
+                        eventName: document.getElementById('custom_eventName').value.trim(),
+                        eventCategory: document.getElementById('custom_eventCategory').value.trim(),
+                        eventDescription: document.getElementById('custom_eventDescription').value.trim(),
+                        eventLocation: document.getElementById('custom_eventLocation').value.trim(),
+                        propertyGroup: document.getElementById('custom_propertyGroup').value.trim(),
+                        propertyLabel: document.getElementById('custom_propertyLabel').value.trim(),
+                        propertyName: document.getElementById('custom_propertyName').value.trim(),
+                        propertyDefinition: document.getElementById('custom_propertyDefinition').value.trim(),
+                        dataType: document.getElementById('custom_dataType').value,
+                        possibleValues: document.getElementById('custom_possibleValues').value.trim(),
+                        codeExamples: document.getElementById('custom_codeExamples').value.trim(),
+                        dataLayerStatus: document.getElementById('custom_dataLayerStatus').value,
+                        statusGA4: document.getElementById('custom_statusGA4').value
+                    };
+
+                    // Verifică că cel puțin Event Name și Property Name sunt completate
+                    if (!eventData.eventName || !eventData.propertyName) {
+                        alert('Te rugăm să completezi cel puțin Event Name și Property Name!');
+                        return;
+                    }
+
+                    // Trimite datele către backend
+                    fetch('/tagging/add-custom-row', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: Object.keys(eventData).map(key => `${key}=${encodeURIComponent(eventData[key])}`).join('&')
+                    })
+                        .then(response => response.text())
+                        .then(data => {
+                            if (data.includes('successfully') || data.includes('already exists')) {
+                                // Reîncarcă pagina pentru a vedea noul rând
+                                window.location.reload();
+                            } else {
+                                alert('Eroare la adăugarea eventului: ' + data);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert('Eroare la adăugarea eventului custom. Verifică consola pentru detalii.');
+                        });
                 });
             }
 
@@ -578,9 +1191,35 @@
                 const cells = row.querySelectorAll('td input, td textarea');
                 if (cells.length >= 13) {
                     // Extrage valorile din input-uri și textarea-uri
-                    const values = Array.from(cells).map(cell => cell.value);
+                    const values = Array.from(cells).map((cell, index) => {
+                        let value = cell.value;
 
-                    // Folosește tab-uri pentru separare - funcționează mult mai bine cu Google Sheets
+                        // Pentru coloana Code Examples (index 10 - al 11-lea câmp)
+                        // Trebuie să păstrăm newline-urile în aceeași celulă (K3)
+                        // Pentru TSV, trebuie să înconjurăm valoarea cu ghilimele duble
+                        if (index === 10) { // Code Examples este al 11-lea câmp (index 10)
+                            // Escape ghilimele duble (CSV/TSV standard)
+                            value = value.replace(/"/g, '""');
+                            // Înconjoară cu ghilimele duble pentru a păstra newline-urile în aceeași celulă
+                            // Google Sheets va interpreta corect acest format
+                            value = '"' + value + '"';
+                        } else {
+                            // Pentru celelalte coloane, înlocuiește newline-urile cu spații
+                            // pentru a evita rânduri noi neintenționate
+                            value = value.replace(/[\n\r]+/g, ' ');
+                            // Escape ghilimele duble dacă există
+                            value = value.replace(/"/g, '""');
+                            // Dacă conține tab-uri, ghilimele sau virgule, înconjoară cu ghilimele
+                            if (value.includes('\t') || value.includes('"') || value.includes(',')) {
+                                value = '"' + value + '"';
+                            }
+                        }
+                        return value;
+                    });
+
+                    // Folosește tab-uri pentru separare între coloane
+                    // Google Sheets va interpreta corect newline-urile din coloana Code Examples
+                    // datorită ghilimelelor duble care înconjoară valoarea
                     const rowData = values.join('\t');
                     csvData += rowData + '\n';
                 }
@@ -591,33 +1230,41 @@
                     <div class="modal-dialog modal-lg">
                         <div class="modal-content">
                             <div class="modal-header">
-                                <h5 class="modal-title">Export Data pentru Google Sheets</h5>
+                                <h5 class="modal-title">Export Manual către Google Sheets</h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                             </div>
                             <div class="modal-body">
-                                <div class="alert alert-success">
-                                    <i class="bi bi-check-circle"></i>
-                                    <strong>Format Optimizat pentru Google Sheets!</strong> 
-                                    <p class="mb-2">Datele sunt formatate cu tab-uri pentru separare perfectă în coloane.</p>
+                                <div class="alert alert-info">
+                                    <i class="bi bi-info-circle"></i>
+                                    <strong>Export Manual către Google Sheets</strong> 
+                                    <p class="mb-2">Datele sunt formatate cu tab-uri pentru separare perfectă în coloane în Google Sheets.</p>
                                     <ol class="mb-0">
-                                        <li><strong>Copiază datele</strong> de mai jos (Ctrl+A, Ctrl+C)</li>
-                                        <li><strong>Deschide Google Sheets</strong> și creează un sheet nou</li>
-                                        <li><strong>Selectează celula A1</strong></li>
-                                        <li><strong>Lipește datele</strong> (Ctrl+V)</li>
-                                        <li><strong>Datele se organizează automat</strong> în coloane separate!</li>
+                                        <li><strong>Click pe "Copiază Datele"</strong> pentru a copia toate datele în clipboard</li>
+                                        <li><strong>Click pe "Deschide Google Sheets"</strong> pentru a deschide un sheet nou</li>
+                                        <li><strong>Selectează celula A1</strong> în Google Sheets</li>
+                                        <li><strong>Lipește datele folosind Paste Special:</strong>
+                                            <ul class="mb-0 mt-2">
+                                                <li>Click dreapta → <strong>Paste special → Paste values only</strong> SAU</li>
+                                                <li>Folosește <strong>Ctrl+Shift+V</strong> (Windows) sau <strong>Cmd+Shift+V</strong> (Mac)</li>
+                                            </ul>
+                                        </li>
+                                        <li><strong>Array-ul de items va apărea corect în coloana K (Code Examples)</strong> pe același rând, cu multiple linii în aceeași celulă!</li>
                                     </ol>
                                 </div>
                                 <div class="mb-3">
                                     <label for="csvData" class="form-label">Date pentru Google Sheets (format tab-separated):</label>
-                                    <textarea class="form-control" id="csvData" rows="10" readonly>${csvData}</textarea>
+                                    <textarea class="form-control font-monospace" id="csvData" rows="15" readonly style="font-size: 0.85em;">${csvData}</textarea>
                                 </div>
-                                <div class="d-flex gap-2">
-                                    <button type="button" class="btn btn-primary" onclick="copyToClipboard()">
+                                <div class="d-flex gap-2 mb-3">
+                                    <button type="button" class="btn btn-primary btn-lg" onclick="copyToClipboard()">
                                         <i class="bi bi-clipboard"></i> Copiază Datele
                                     </button>
-                                    <button type="button" class="btn btn-success" onclick="openGoogleSheets()">
+                                    <button type="button" class="btn btn-success btn-lg" onclick="openGoogleSheets()">
                                         <i class="bi bi-google"></i> Deschide Google Sheets
                                     </button>
+                                </div>
+                                <div class="alert alert-light">
+                                    <small><i class="bi bi-lightbulb"></i> <strong>Tip:</strong> După ce copiezi datele, butonul "Deschide Google Sheets" va deschide automat un sheet nou unde poți face paste direct.</small>
                                 </div>
                             </div>
                             <div class="modal-footer">
@@ -644,16 +1291,44 @@
         // Funcție pentru copierea datelor în clipboard
         function copyToClipboard() {
             const textarea = document.getElementById('csvData');
+            if (!textarea) {
+                alert('❌ Eroare: Textarea-ul nu a fost găsit!');
+                return;
+            }
+
             textarea.select();
             textarea.setSelectionRange(0, 99999); // Pentru mobile
 
             try {
                 document.execCommand('copy');
-                alert('✅ Datele au fost copiate în clipboard!\n\nAcum poți:\n1. Deschide Google Sheets\n2. Selecta celula A1\n3. Lipi datele (Ctrl+V)');
+                // Feedback vizual
+                const btn = event.target.closest('button');
+                if (btn) {
+                    const originalText = btn.innerHTML;
+                    btn.innerHTML = '<i class="bi bi-check-circle"></i> Copiat!';
+                    btn.classList.remove('btn-primary');
+                    btn.classList.add('btn-success');
+                    setTimeout(() => {
+                        btn.innerHTML = originalText;
+                        btn.classList.remove('btn-success');
+                        btn.classList.add('btn-primary');
+                    }, 2000);
+                }
             } catch (err) {
                 // Fallback pentru browsere moderne
                 navigator.clipboard.writeText(textarea.value).then(() => {
-                    alert('✅ Datele au fost copiate în clipboard!\n\nAcum poți:\n1. Deschide Google Sheets\n2. Selecta celula A1\n3. Lipi datele (Ctrl+V)');
+                    const btn = event.target.closest('button');
+                    if (btn) {
+                        const originalText = btn.innerHTML;
+                        btn.innerHTML = '<i class="bi bi-check-circle"></i> Copiat!';
+                        btn.classList.remove('btn-primary');
+                        btn.classList.add('btn-success');
+                        setTimeout(() => {
+                            btn.innerHTML = originalText;
+                            btn.classList.remove('btn-success');
+                            btn.classList.add('btn-primary');
+                        }, 2000);
+                    }
                 }).catch(() => {
                     alert('❌ Eroare la copierea datelor! Încearcă să selectezi manual textul și să-l copiezi.');
                 });
@@ -662,7 +1337,22 @@
 
         // Funcție pentru deschiderea Google Sheets
         function openGoogleSheets() {
+            // Deschide Google Sheets nou într-un tab nou
             window.open('https://docs.google.com/spreadsheets/create', '_blank');
+
+            // Feedback vizual
+            const btn = event.target.closest('button');
+            if (btn) {
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="bi bi-check-circle"></i> Deschis!';
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-info');
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.classList.remove('btn-info');
+                    btn.classList.add('btn-success');
+                }, 2000);
+            }
         }
 
         // Funcție pentru afișarea JSON-ului în modal

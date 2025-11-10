@@ -49,12 +49,12 @@ public class TaggingController {
         // Parametri predefiniți pentru purchase
         List<Parameter> parameters = Arrays.asList(
             new Parameter("event", "purchase", "The event name."),
-            new Parameter("value", "1439.00", "The revenue of the event."),
-            new Parameter("coupon", "Summer Sale", "The coupon name/code associated with the event."),
-            new Parameter("transaction_id", "NL-23435342", "The unique identifier of a transaction."),
-            new Parameter("shipping", "10.34", "Shipping cost associated with a transaction."),
             new Parameter("currency", "RON", "Currency of the value. Use three letter ISO 4217 format."),
-            new Parameter("affiliation", "Store Name", "The store or affiliation from which this transaction occurred."),
+            new Parameter("value", "1439.00", "The revenue of the event."),
+            new Parameter("customer_type", "new", "New or returning user from the last 540-day recommended period"),
+            new Parameter("transaction_id", "NL-23435342", "The unique identifier of a transaction."),
+            new Parameter("coupon", "Summer Sale", "The coupon name/code associated with the event."),
+            new Parameter("shipping", "10.34", "Shipping cost associated with a transaction."),
             new Parameter("tax", "15.23", "Tax cost associated with a transaction."),
             new Parameter("items", "[{itemKey: itemValue}]", "A list with the product (or products) in the shopping cart.")
         );
@@ -67,78 +67,83 @@ public class TaggingController {
     }
     
     @PostMapping("/generate")
-    public String generateTaggingPlan(@RequestParam String selectedEvent, 
-                                   @RequestParam(required = false) List<String> selectedParameters,
+    public String generateTaggingPlan(@RequestParam(required = false) List<String> selectedEvents,
+                                   @RequestParam(required = false) List<String> selectedItems,
                                    Model model) {
-        // Găsim evenimentul selectat
-        Event event = getEventByName(selectedEvent);
-        
-        if (event != null && selectedParameters != null) {
-            // Verificăm dacă evenimentul există deja în listă
-            boolean eventExists = taggingRows.stream()
-                .anyMatch(row -> row.getEventName().equals(event.getEvent()));
-            
-            // Dacă evenimentul nu există, adăugăm un rând cu informațiile despre eveniment
-            if (!eventExists) {
-                // Generează codul JavaScript pentru eveniment
-                String generatedCode = generateJavaScriptCode(event.getEvent(), selectedParameters);
-                
-                TaggingRow eventRow = new TaggingRow(
-                    event.getEvent(), // eventName
-                    "Ecommerce", // eventCategory
-                    event.getPurpose(), // eventDescription
-                    event.getTrigger(), // eventLocation
-                    "Analytics", // propertyGroup
-                    "Dimension", // propertyLabel
-                    "event", // propertyName
-                    "The event name.", // propertyDefinition
-                    "String", // dataType
-                    event.getEvent(), // possibleValues
-                    generatedCode, // codeExamples - codul generat
-                    "yes", // dataLayerStatus
-                    "yes" // statusGA4
-                );
-                taggingRows.add(eventRow);
-            }
-            
-            // Adăugăm rânduri pentru fiecare parametru selectat
-            boolean parametersAdded = false;
-            for (String paramName : selectedParameters) {
-                Parameter param = getParameterByName(paramName);
-                if (param != null) {
-                    // Verificăm dacă parametrul există deja pentru acest eveniment
-                    boolean paramExists = taggingRows.stream()
-                        .anyMatch(row -> row.getEventName().equals(event.getEvent()) && 
-                                       row.getPropertyName().equals(param.getParameterName()));
+        if (selectedEvents != null && !selectedEvents.isEmpty()) {
+            for (String eventName : selectedEvents) {
+                Event event = getEventByName(eventName);
+                if (event != null) {
+                    // Verificăm dacă evenimentul există deja în listă
+                    boolean eventExists = taggingRows.stream()
+                        .anyMatch(row -> row.getEventName().equals(event.getEvent()));
                     
-                    if (!paramExists) {
-                        TaggingRow paramRow = new TaggingRow(
-                            "", // eventName gol pentru rândul de parametru
-                            "", // eventCategory gol pentru rândul de parametru
-                            "", // eventDescription gol pentru rândul de parametru
-                            "", // eventLocation gol pentru rândul de parametru
+                    // Obținem parametrii oficiali pentru acest eveniment
+                    List<String> officialParameters = getOfficialParametersForEvent(eventName);
+                    
+                    // Dacă evenimentul nu există, adăugăm un rând cu informațiile despre eveniment
+                    if (!eventExists) {
+                        // Generează codul JavaScript pentru eveniment cu parametrii oficiali
+                        String generatedCode = generateJavaScriptCode(event.getEvent(), officialParameters, selectedItems);
+                        
+                        TaggingRow eventRow = new TaggingRow(
+                            event.getEvent(), // eventName
+                            "Ecommerce", // eventCategory
+                            event.getPurpose(), // eventDescription
+                            event.getTrigger(), // eventLocation
                             "Analytics", // propertyGroup
-                            getPropertyLabel(param.getParameterName()), // propertyLabel
-                            param.getParameterName(), // propertyName
-                            param.getParameterDescription(), // propertyDefinition
-                            getDataType(param.getParameterName()), // dataType
-                            param.getExampleValue(), // possibleValues
-                            "", // codeExamples - gol pentru parametri
+                            "Dimension", // propertyLabel
+                            "event", // propertyName
+                            "The event name.", // propertyDefinition
+                            "String", // dataType
+                            event.getEvent(), // possibleValues
+                            generatedCode, // codeExamples - codul generat
                             "yes", // dataLayerStatus
                             "yes" // statusGA4
                         );
-                        
-                        // Găsim poziția unde să adăugăm parametrul
-                        int insertPosition = findInsertPositionForParameter(event.getEvent());
-                        taggingRows.add(insertPosition, paramRow);
-                        parametersAdded = true;
+                        taggingRows.add(eventRow);
+                    }
+                    
+                    // Adăugăm rânduri pentru fiecare parametru oficial
+                    boolean parametersAdded = false;
+                    for (String paramName : officialParameters) {
+                        Parameter param = getParameterByName(paramName);
+                        if (param != null) {
+                            // Verificăm dacă parametrul există deja pentru acest eveniment
+                            boolean paramExists = taggingRows.stream()
+                                .anyMatch(row -> row.getEventName().equals(event.getEvent()) && 
+                                               row.getPropertyName().equals(param.getParameterName()));
+                            
+                            if (!paramExists) {
+                                TaggingRow paramRow = new TaggingRow(
+                                    "", // eventName gol pentru rândul de parametru
+                                    "", // eventCategory gol pentru rândul de parametru
+                                    "", // eventDescription gol pentru rândul de parametru
+                                    "", // eventLocation gol pentru rândul de parametru
+                                    "Analytics", // propertyGroup
+                                    getPropertyLabel(param.getParameterName()), // propertyLabel
+                                    param.getParameterName(), // propertyName
+                                    param.getParameterDescription(), // propertyDefinition
+                                    getDataType(param.getParameterName()), // dataType
+                                    param.getExampleValue(), // possibleValues
+                                    "", // codeExamples - gol pentru parametri
+                                    "yes", // dataLayerStatus
+                                    "yes" // statusGA4
+                                );
+                                
+                                // Găsim poziția unde să adăugăm parametrul
+                                int insertPosition = findInsertPositionForParameter(event.getEvent());
+                                taggingRows.add(insertPosition, paramRow);
+                                parametersAdded = true;
+                            }
+                        }
+                    }
+                    
+                    // Dacă evenimentul există deja și am adăugat parametri noi, actualizez codul JavaScript
+                    if (eventExists && parametersAdded) {
+                        updateEventCodeExamplesAfterAdd(event.getEvent(), selectedItems);
                     }
                 }
-            }
-            
-            // Dacă evenimentul există deja și am adăugat parametri noi, actualizez codul JavaScript
-            if (eventExists && parametersAdded) {
-                updateEventCodeExamplesAfterAdd(event.getEvent());
             }
         }
         
@@ -289,11 +294,29 @@ public class TaggingController {
             return "redirect:/tagging?error=no-data";
         }
         
-        // Generează URL-ul pentru Google Sheets cu datele
-        String googleSheetsUrl = googleSheetsService.generateGoogleSheetsUrl(taggingRows);
-        
-        // Redirecționează către Google Sheets
-        return "redirect:" + googleSheetsUrl;
+        try {
+            System.out.println("Încep să creez Google Sheet cu " + taggingRows.size() + " rânduri...");
+            
+            // Verifică fișierele din Drive înainte de creare (pentru debugging)
+            googleSheetsService.listAllFilesInDrive();
+            
+            // Creează Google Sheet cu datele folosind API-ul real
+            String googleSheetsUrl = googleSheetsService.createGoogleSheet(taggingRows);
+            
+            System.out.println("Google Sheet creat cu succes: " + googleSheetsUrl);
+            
+            // Redirecționează către Google Sheet-ul creat
+            return "redirect:" + googleSheetsUrl;
+        } catch (Exception e) {
+            // Log eroarea pentru debugging
+            System.err.println("Eroare la crearea Google Sheet: " + e.getMessage());
+            e.printStackTrace();
+            
+            // În caz de eroare, redirecționează cu mesaj de eroare
+            String errorMessage = e.getMessage() != null ? e.getMessage() : "Eroare necunoscută";
+            return "redirect:/tagging?error=google-sheets-error&message=" + 
+                   java.net.URLEncoder.encode(errorMessage, java.nio.charset.StandardCharsets.UTF_8);
+        }
     }
     
     @GetMapping("/export-google-sheet-data")
@@ -321,6 +344,21 @@ public class TaggingController {
         
         // Creează URL-ul pentru Google Sheets cu datele
         return "https://docs.google.com/spreadsheets/create?usp=sharing&usp=import&data=" + encodedData;
+    }
+    
+    @GetMapping("/test-google-sheets")
+    @ResponseBody
+    public ResponseEntity<String> testGoogleSheets() {
+        try {
+            // Test simplu - doar verifică dacă serviciul se poate injecta
+            if (googleSheetsService != null) {
+                return ResponseEntity.ok("Google Sheets Service este configurat corect!");
+            } else {
+                return ResponseEntity.badRequest().body("Google Sheets Service nu este configurat!");
+            }
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Eroare la testarea Google Sheets: " + e.getMessage());
+        }
     }
     
     @GetMapping("/export-csv")
@@ -367,14 +405,16 @@ public class TaggingController {
     private Parameter getParameterByName(String paramName) {
         List<Parameter> parameters = Arrays.asList(
             new Parameter("event", "purchase", "The event name."),
-            new Parameter("value", "1439.00", "The revenue of the event."),
-            new Parameter("coupon", "Summer Sale", "The coupon name/code associated with the event."),
-            new Parameter("transaction_id", "NL-23435342", "The unique identifier of a transaction."),
-            new Parameter("shipping", "10.34", "Shipping cost associated with a transaction."),
             new Parameter("currency", "RON", "Currency of the value. Use three letter ISO 4217 format."),
-            new Parameter("affiliation", "Store Name", "The store or affiliation from which this transaction occurred."),
+            new Parameter("value", "1439.00", "The revenue of the event."),
+            new Parameter("customer_type", "new", "Is the conversion from a `new` or `returning` customer?"),
+            new Parameter("transaction_id", "NL-23435342", "The unique identifier of a transaction."),
+            new Parameter("coupon", "Summer Sale", "The coupon name/code associated with the event."),
+            new Parameter("shipping", "10.34", "Shipping cost associated with a transaction."),
             new Parameter("tax", "15.23", "Tax cost associated with a transaction."),
-            new Parameter("items", "[{itemKey: itemValue}]", "A list with the product (or products) in the shopping cart.")
+            new Parameter("items", "[{itemKey: itemValue}]", "A list with the product (or products) in the shopping cart."),
+            new Parameter("search_term", "winter jacket", "The term that was searched for."),
+            new Parameter("method", "email", "The method used to log in.")
         );
         
         return parameters.stream()
@@ -393,8 +433,11 @@ public class TaggingController {
             case "coupon":
             case "transaction_id":
             case "currency":
+            case "customer_type":
             case "affiliation":
             case "items":
+            case "search_term":
+            case "method":
                 return "Dimension";
             default:
                 return "Dimension";
@@ -414,6 +457,8 @@ public class TaggingController {
             case "transaction_id":
             case "currency":
             case "affiliation":
+            case "search_term":
+            case "method":
                 return "String";
             default:
                 return "String";
@@ -498,7 +543,7 @@ public class TaggingController {
     /**
      * Generează codul JavaScript pentru un eveniment și parametrii săi
      */
-    private String generateJavaScriptCode(String eventName, List<String> selectedParameters) {
+    private String generateJavaScriptCode(String eventName, List<String> selectedParameters, List<String> selectedItems) {
         StringBuilder code = new StringBuilder();
         
         // Header standard - formatat frumos
@@ -524,6 +569,9 @@ public class TaggingController {
                     case "value":
                         code.append("    'value': $value");
                         break;
+                    case "customer_type":
+                        code.append("    'customer_type': $value");
+                        break;
                     case "transaction_id":
                         code.append("    'transaction_id': $value");
                         break;
@@ -539,11 +587,84 @@ public class TaggingController {
                     case "affiliation":
                         code.append("    'affiliation': $value");
                         break;
+                    case "search_term":
+                        code.append("    'search_term': $value");
+                        break;
+                    case "method":
+                        code.append("    'method': $value");
+                        break;
                     case "items":
                         code.append("    'items': [\n");
                         code.append("      {\n");
-                        code.append("        item_object_1\n");
-                        code.append("      }\n");
+                        
+                        // Adaugă opțiunile selectate pentru items
+                        if (selectedItems != null && !selectedItems.isEmpty()) {
+                            boolean firstItem = true;
+                            for (String item : selectedItems) {
+                                if (!firstItem) {
+                                    code.append(",\n");
+                                }
+                                switch (item) {
+                                    case "item_id":
+                                        code.append("        'item_id': $value");
+                                        break;
+                                    case "item_name":
+                                        code.append("        'item_name': $value");
+                                        break;
+                                    case "item_category":
+                                        code.append("        'item_category': $value");
+                                        break;
+                                    case "item_category2":
+                                        code.append("        'item_category2': $value");
+                                        break;
+                                    case "item_category3":
+                                        code.append("        'item_category3': $value");
+                                        break;
+                                    case "item_brand":
+                                        code.append("        'item_brand': $value");
+                                        break;
+                                    case "item_variant":
+                                        code.append("        'item_variant': $value");
+                                        break;
+                                    case "item_list_id":
+                                        code.append("        'item_list_id': $value");
+                                        break;
+                                    case "item_list_name":
+                                        code.append("        'item_list_name': $value");
+                                        break;
+                                    case "price":
+                                        code.append("        'price': $value");
+                                        break;
+                                    case "quantity":
+                                        code.append("        'quantity': $value");
+                                        break;
+                                    case "discount":
+                                        code.append("        'discount': $value");
+                                        break;
+                                    case "affiliation":
+                                        code.append("        'affiliation': $value");
+                                        break;
+                                    case "coupon":
+                                        code.append("        'coupon': $value");
+                                        break;
+                                    case "index":
+                                        code.append("        'index': $value");
+                                        break;
+                                    default:
+                                        // Pentru parametri custom sau alți parametri
+                                        code.append("        '").append(item).append("': $value");
+                                        break;
+                                }
+                                firstItem = false;
+                            }
+                        } else {
+                            // Default: item_id, item_name, item_category
+                            code.append("        'item_id': $value,\n");
+                            code.append("        'item_name': $value,\n");
+                            code.append("        'item_category': $value");
+                        }
+                        
+                        code.append("\n      }\n");
                         code.append("    ]");
                         break;
                     default:
@@ -591,6 +712,9 @@ public class TaggingController {
                     case "value":
                         code.append("'value': $value");
                         break;
+                    case "customer_type":
+                        code.append("'customer_type': $value");
+                        break;
                     case "transaction_id":
                         code.append("'transaction_id': $value");
                         break;
@@ -605,6 +729,12 @@ public class TaggingController {
                         break;
                     case "affiliation":
                         code.append("'affiliation': $value");
+                        break;
+                    case "search_term":
+                        code.append("'search_term': $value");
+                        break;
+                    case "method":
+                        code.append("'method': $value");
                         break;
                     case "items":
                         code.append("'items': [{ item_object_1 }]");
@@ -664,7 +794,7 @@ public class TaggingController {
     /**
      * Actualizează codul JavaScript pentru un eveniment după adăugarea parametrilor noi
      */
-    private void updateEventCodeExamplesAfterAdd(String eventName) {
+    private void updateEventCodeExamplesAfterAdd(String eventName, List<String> selectedItems) {
         // Găsim toți parametrii existenți pentru acest eveniment din tabel
         List<String> allParameters = new ArrayList<>();
         
@@ -692,7 +822,7 @@ public class TaggingController {
         System.out.println("All parameters: " + allParameters);
         
         // Generează codul JavaScript cu toți parametrii din tabel
-        String updatedCode = generateJavaScriptCode(eventName, allParameters);
+        String updatedCode = generateJavaScriptCode(eventName, allParameters, selectedItems);
         System.out.println("Generated code: " + updatedCode);
         
         // Actualizez codul în rândul de eveniment
@@ -751,8 +881,8 @@ public class TaggingController {
         
         System.out.println("Remaining parameters: " + remainingParameters);
         
-        // Generează codul JavaScript cu parametrii rămași
-        String updatedCode = generateJavaScriptCode(eventName, remainingParameters);
+        // Generează codul JavaScript cu parametrii rămași (folosim null pentru selectedItems la ștergere)
+        String updatedCode = generateJavaScriptCode(eventName, remainingParameters, null);
         System.out.println("Generated code: " + updatedCode);
         
         // Actualizez codul în rândul de eveniment
@@ -784,6 +914,65 @@ public class TaggingController {
         }
         
         return false;
+    }
+    
+    /**
+     * Obține parametrii oficiali pentru un eveniment specific
+     */
+    private List<String> getOfficialParametersForEvent(String eventName) {
+        List<String> parameters = new ArrayList<>();
+        
+        switch (eventName) {
+            case "view_item_list":
+                parameters.addAll(Arrays.asList("event", "currency", "value", "items"));
+                break;
+            case "view_item":
+                parameters.addAll(Arrays.asList("event", "currency", "value", "items"));
+                break;
+            case "select_item":
+                parameters.addAll(Arrays.asList("event", "currency", "value", "items"));
+                break;
+            case "add_to_cart":
+                parameters.addAll(Arrays.asList("event", "currency", "value", "items"));
+                break;
+            case "view_cart":
+                parameters.addAll(Arrays.asList("event", "currency", "value", "items"));
+                break;
+            case "add_to_wishlist":
+                parameters.addAll(Arrays.asList("event", "currency", "value", "items"));
+                break;
+            case "view_promotion":
+                parameters.addAll(Arrays.asList("event", "currency", "value", "items"));
+                break;
+            case "select_promotion":
+                parameters.addAll(Arrays.asList("event", "currency", "value", "items"));
+                break;
+            case "begin_checkout":
+                parameters.addAll(Arrays.asList("event", "currency", "value", "items", "coupon"));
+                break;
+            case "add_shipping_info":
+                parameters.addAll(Arrays.asList("event", "currency", "value", "items", "coupon"));
+                break;
+            case "add_payment_info":
+                parameters.addAll(Arrays.asList("event", "currency", "value", "items", "coupon"));
+                break;
+            case "purchase":
+                parameters.addAll(Arrays.asList("event", "currency", "value", "customer_type", 
+                                               "transaction_id", "coupon", "shipping", "tax", "items"));
+                break;
+            case "search":
+                parameters.addAll(Arrays.asList("event", "search_term"));
+                break;
+            case "login":
+                parameters.addAll(Arrays.asList("event", "method"));
+                break;
+            default:
+                // Parametri de bază pentru evenimente necunoscute
+                parameters.addAll(Arrays.asList("event", "currency", "value"));
+                break;
+        }
+        
+        return parameters;
     }
     
 }
