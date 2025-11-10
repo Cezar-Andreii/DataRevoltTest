@@ -17,7 +17,7 @@ import java.util.Collections;
 @Service
 public class GoogleSheetsService {
     
-    @Autowired
+    @Autowired(required = false)
     private Sheets sheetsService;
     
     @Autowired(required = false)
@@ -156,6 +156,10 @@ public class GoogleSheetsService {
     public String createGoogleSheet(List<TaggingRow> taggingRows) throws IOException {
         if (taggingRows == null || taggingRows.isEmpty()) {
             throw new IllegalArgumentException("Nu există date pentru export");
+        }
+        
+        if (sheetsService == null) {
+            throw new IllegalStateException("Google Sheets API nu este configurat. Verifică credențialele.");
         }
         
         System.out.println("GoogleSheetsService: Pregătesc să creez Google Sheet...");
@@ -337,6 +341,11 @@ public class GoogleSheetsService {
      * Formatează header-ul pentru a arăta mai bine
      */
     private void formatHeader(String spreadsheetId) throws IOException {
+        if (sheetsService == null) {
+            System.out.println("GoogleSheetsService: ⚠️ Sheets service nu este disponibil, skip formatare header");
+            return;
+        }
+        
         // Creează request pentru formatare
         List<Request> requests = new ArrayList<>();
         
