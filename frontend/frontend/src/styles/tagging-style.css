@@ -1,0 +1,487 @@
+/* Stiluri pentru interfața de tip Google Sheet */
+body {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    min-height: 100vh;
+}
+
+/* Stiluri pentru logo */
+.logo-container {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin-bottom: 1rem;
+    padding-left: 0;
+}
+
+.logo-container img {
+    height: 60px;
+    width: auto;
+    max-width: 250px;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+    transition: transform 0.2s ease;
+}
+
+.logo-container img:hover {
+    transform: scale(1.05);
+}
+
+/* Responsive pentru logo */
+@media (max-width: 768px) {
+    .logo-container {
+        justify-content: center;
+        margin-bottom: 1rem;
+    }
+
+    .logo-container img {
+        height: 50px;
+        max-width: 200px;
+    }
+}
+
+@media (max-width: 480px) {
+    .logo-container img {
+        height: 40px;
+        max-width: 150px;
+    }
+}
+
+.container-fluid {
+    padding: 30px;
+    background: transparent;
+}
+
+/* Stiluri pentru tabelul principal */
+#taggingTable {
+    background-color: white;
+    border-collapse: separate;
+    border-spacing: 0;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #e0e0e0;
+}
+
+#taggingTable thead th {
+    background: linear-gradient(135deg, #4285f4 0%, #34a853 100%);
+    color: white;
+    font-weight: 600;
+    text-align: center;
+    padding: 14px 8px;
+    border: none;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    font-size: 12px;
+    letter-spacing: 0.5px;
+}
+
+#taggingTable tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+#taggingTable tbody tr:hover {
+    background-color: #f1f3f4;
+}
+
+#taggingTable tbody tr:nth-child(even) {
+    background-color: #fafafa;
+}
+
+#taggingTable tbody tr:nth-child(even):hover {
+    background-color: #f1f3f4;
+}
+
+#taggingTable td {
+    padding: 8px;
+    border: 1px solid #e0e0e0;
+    vertical-align: middle;
+}
+
+/* Stiluri pentru celulele editabile */
+.editable-cell {
+    border: 1px solid transparent;
+    background: transparent;
+    padding: 6px 8px;
+    font-size: 13px;
+    width: 100%;
+    transition: all 0.2s ease;
+    cursor: text;
+    border-radius: 4px;
+    min-height: 32px;
+}
+
+.editable-cell:focus {
+    background-color: white;
+    border: 2px solid #4285f4;
+    border-radius: 4px;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.1);
+    cursor: text;
+    transform: scale(1.02);
+}
+
+.editable-cell:hover {
+    background-color: #f8f9fa;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.editable-cell:not(:focus):not(:hover) {
+    border: 1px solid transparent;
+}
+
+/* Stiluri speciale pentru textarea */
+.editable-cell[type="textarea"] {
+    resize: vertical;
+    min-height: 60px;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+/* Stiluri pentru butoane */
+.btn-group .btn {
+    padding: 6px 10px;
+    font-size: 12px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    border-width: 1px;
+}
+
+.edit-btn {
+    color: #4285f4;
+    border-color: #4285f4;
+    background-color: transparent;
+}
+
+.edit-btn:hover {
+    background-color: #4285f4;
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(66, 133, 244, 0.3);
+}
+
+.delete-btn {
+    color: #dc3545;
+    border-color: #dc3545;
+    background-color: transparent;
+}
+
+.delete-btn:hover {
+    background-color: #dc3545;
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
+}
+
+/* Stiluri pentru card-uri */
+.card {
+    border: none;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    border: 1px solid #e0e0e0;
+}
+
+.card-header {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-bottom: 1px solid #e0e0e0;
+    font-weight: 600;
+    border-radius: 12px 12px 0 0;
+    padding: 20px;
+}
+
+/* Stiluri pentru formularul de selecție */
+.parameter-checkboxes {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 15px;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.parameter-checkboxes .form-check {
+    margin-bottom: 8px;
+}
+
+.parameter-checkboxes .form-check-label {
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.parameter-checkboxes .form-check-input {
+    margin-top: 0.25rem;
+}
+
+/* Stiluri pentru modal */
+.modal-content {
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+/* Stiluri pentru badge */
+.badge {
+    font-size: 12px;
+    padding: 6px 12px;
+}
+
+/* Stiluri responsive */
+@media (max-width: 768px) {
+    .container-fluid {
+        padding: 10px;
+    }
+
+    #taggingTable {
+        font-size: 12px;
+    }
+
+    #taggingTable th,
+    #taggingTable td {
+        padding: 6px 4px;
+    }
+
+    .editable-cell {
+        font-size: 12px;
+        padding: 2px 4px;
+    }
+}
+
+/* Stiluri pentru scrollbar */
+.parameter-checkboxes::-webkit-scrollbar {
+    width: 6px;
+}
+
+.parameter-checkboxes::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.parameter-checkboxes::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.parameter-checkboxes::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Animații pentru hover */
+.btn {
+    transition: all 0.2s ease;
+    border-radius: 8px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #4285f4 0%, #34a853 100%);
+    border: none;
+    box-shadow: 0 2px 8px rgba(66, 133, 244, 0.3);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #3367d6 0%, #2d8f47 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(66, 133, 244, 0.4);
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    border: none;
+    box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+}
+
+.btn-danger:hover {
+    background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+}
+
+.card {
+    transition: box-shadow 0.2s ease;
+}
+
+.card:hover {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Stiluri pentru text muted */
+.text-muted {
+    color: #6c757d !important;
+    font-size: 12px;
+}
+
+/* Stiluri pentru empty state */
+#taggingTable tbody tr td.text-center {
+    padding: 40px 20px;
+    font-style: italic;
+}
+
+/* Stiluri pentru sticky header */
+.table-responsive {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+/* Stiluri pentru focus states */
+.form-control:focus,
+.form-select:focus {
+    border-color: #4285f4;
+    box-shadow: 0 0 0 0.2rem rgba(66, 133, 244, 0.25);
+}
+
+/* Stiluri pentru butoane de acțiune */
+.btn-outline-primary:hover,
+.btn-outline-danger:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Stiluri pentru rândurile de eveniment */
+.table-primary {
+    background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%) !important;
+    border-left: 4px solid #4285f4;
+    box-shadow: 0 2px 4px rgba(66, 133, 244, 0.1);
+    margin-bottom: 2px;
+}
+
+.table-primary:hover {
+    background: linear-gradient(135deg, #bbdefb 0%, #e1bee7 100%) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(66, 133, 244, 0.2);
+}
+
+.table-primary td {
+    border-top: 1px solid #4285f4;
+    border-bottom: 1px solid #4285f4;
+}
+
+/* Stiluri pentru celulele goale (parametri) */
+.bg-light {
+    background-color: transparent !important;
+    color: #6c757d;
+    font-style: italic;
+    border: 1px dashed #dee2e6 !important;
+}
+
+.bg-light:focus {
+    background-color: white !important;
+    color: #212529;
+    font-style: normal;
+    border: 2px solid #4285f4 !important;
+}
+
+/* Stiluri pentru separarea vizuală */
+#taggingTable tbody tr.table-primary {
+    border-top: 2px solid #4285f4;
+    margin-top: 10px;
+}
+
+#taggingTable tbody tr.table-primary td {
+    font-weight: 600;
+    color: #1565c0;
+}
+
+/* Stiluri pentru grupare vizuală */
+#taggingTable tbody tr:not(.table-primary) {
+    border-left: 3px solid #e3f2fd;
+    background-color: #fafafa;
+}
+
+#taggingTable tbody tr:not(.table-primary) td:first-child {
+    padding-left: 20px;
+    position: relative;
+}
+
+#taggingTable tbody tr:not(.table-primary) td:first-child::before {
+    content: "└─";
+    position: absolute;
+    left: 5px;
+    color: #4285f4;
+    font-weight: bold;
+}
+
+/* Stiluri pentru rândurile de parametri */
+#taggingTable tbody tr:not(.table-primary) td {
+    background-color: #f8f9fa;
+    border-left: 1px solid #e0e0e0;
+}
+
+#taggingTable tbody tr:not(.table-primary):hover td {
+    background-color: #f1f3f4;
+}
+
+/* Stiluri pentru rândul cu explicații din header */
+thead tr.table-info {
+    background-color: #d1ecf1 !important;
+}
+
+thead tr.table-info td {
+    background-color: #f8f9fa !important;
+    color: #495057;
+    font-size: 10px;
+    line-height: 1.3;
+    padding: 8px 4px;
+    border: 1px solid #dee2e6;
+    vertical-align: top;
+    text-align: left;
+    font-weight: 500;
+}
+
+/* Stiluri pentru coloanele noi */
+#taggingTable th {
+    font-size: 11px;
+    padding: 8px 4px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+#taggingTable td {
+    padding: 6px 4px;
+    font-size: 12px;
+}
+
+.editable-cell {
+    font-size: 11px;
+    padding: 2px 4px;
+}
+
+/* Stiluri responsive pentru noile coloane */
+@media (max-width: 1200px) {
+    #taggingTable th,
+    #taggingTable td {
+        font-size: 10px;
+        padding: 4px 2px;
+    }
+
+    .editable-cell {
+        font-size: 10px;
+        padding: 1px 2px;
+    }
+}
+
+@media (max-width: 768px) {
+    #taggingTable {
+        font-size: 9px;
+    }
+
+    #taggingTable th,
+    #taggingTable td {
+        padding: 3px 1px;
+    }
+
+    .editable-cell {
+        font-size: 9px;
+        padding: 1px;
+    }
+}
+
